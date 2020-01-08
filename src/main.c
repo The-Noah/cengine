@@ -4,8 +4,8 @@
 #define GLEW_STATIC
 #include <GL\glew.h>
 #include <GLFW\glfw3.h>
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+
+#include "texture.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
   glViewport(0, 0, width, height);
@@ -127,27 +127,8 @@ int main(){
   glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
   glEnableVertexAttribArray(2);
 
-  unsigned int texture;
-  glGenTextures(1, &texture);
-  glBindTexture(GL_TEXTURE_2D, texture); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
-  // set the texture wrapping parameters
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  // set texture filtering parameters
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  // load image, create texture and generate mipmaps
-  int width, height, nrChannels;
-  stbi_set_flip_vertically_on_load(1);
-  unsigned char *data = stbi_load("res/grass.png", &width, &height, &nrChannels, STBI_rgb_alpha);
-  if(data){
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-  }else{
-    fprintf(stderr, "failed to create texture: %s\n", "grass.png");
-    return -1;
-  }
-  stbi_image_free(data);
+  glActiveTexture(GL_TEXTURE0);
+  unsigned int texture = texture_create("grass.png");
 
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // wireframe;
   while(!glfwWindowShouldClose(window)){
@@ -156,8 +137,7 @@ int main(){
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    texture_bind(texture);
     glUseProgram(shader_program);
 
     glBindVertexArray(VAO);
@@ -166,6 +146,8 @@ int main(){
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
+
+  texture_delete(&texture);
 
   glDeleteVertexArrays(1, &VAO);
   glDeleteBuffers(1, &VBO);
