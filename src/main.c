@@ -5,6 +5,7 @@
 #include <GL\glew.h>
 #include <GLFW\glfw3.h>
 
+#include "shader.h"
 #include "texture.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
@@ -75,11 +76,6 @@ int main(){
     "  ourColor = aColor;\n"
     "  TexCoord = vec2(aTexCoord.x, aTexCoord.y);\n"
     "}";
-  
-  unsigned int vertex_shader;
-  vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
-  glCompileShader(vertex_shader);
 
   const char* fragment_shader_source = "#version 330 core\n"
     "out vec4 FragColor;\n"
@@ -89,20 +85,6 @@ int main(){
     "void main(){\n"
     "  FragColor = texture(texture1, TexCoord) * vec4(ourColor, 1.0);\n"
     "}";
-  
-  unsigned int fragment_shader;
-  fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fragment_shader, 1, &fragment_shader_source, NULL);
-  glCompileShader(fragment_shader);
-
-  unsigned int shader_program;
-  shader_program = glCreateProgram();
-
-  glAttachShader(shader_program, vertex_shader);
-  glAttachShader(shader_program, fragment_shader);
-  glLinkProgram(shader_program);
-  glDeleteShader(vertex_shader);
-  glDeleteShader(fragment_shader);
 
   unsigned int VAO, VBO, EBO;
   glGenVertexArrays(1, &VAO);
@@ -127,6 +109,8 @@ int main(){
   glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
   glEnableVertexAttribArray(2);
 
+  unsigned int shader = shader_create(vertex_shader_source, fragment_shader_source);
+
   glActiveTexture(GL_TEXTURE0);
   unsigned int texture = texture_create("grass.png");
 
@@ -138,7 +122,7 @@ int main(){
     glClear(GL_COLOR_BUFFER_BIT);
 
     texture_bind(texture);
-    glUseProgram(shader_program);
+    shader_bind(shader);
 
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -148,6 +132,7 @@ int main(){
   }
 
   texture_delete(&texture);
+  shader_delete(shader);
 
   glDeleteVertexArrays(1, &VAO);
   glDeleteBuffers(1, &VBO);
