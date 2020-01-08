@@ -1,0 +1,8 @@
+# build
+bin
+obj
+Makefile
+*.make
+
+# config
+.vscode
