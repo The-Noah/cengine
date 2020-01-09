@@ -13,6 +13,7 @@
 #include "../renderer/texture.h"
 #include "../camera.h"
 #include "../main.h"
+#include "../textures.h"
 
 const float cube_vertices[] = {
   // front
@@ -94,7 +95,7 @@ void game_state_init(){
   shader_bind(shader);
 
   glActiveTexture(GL_TEXTURE0);
-  texture = texture_create("grass.png");
+  texture = texture_create(GRASS);
 
   modelLoc = glGetUniformLocation(shader, "model");
   mat4 model = GLMS_MAT4_IDENTITY_INIT;
