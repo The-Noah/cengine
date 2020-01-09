@@ -4,14 +4,14 @@
 typedef void (*fnPtr)();
 typedef void (*fnPtrFl)(float);
 
-typedef struct {
+typedef struct{
   fnPtr init;
   fnPtr destroy;
   fnPtrFl update;
   fnPtr draw;
 } State;
 
-typedef struct {
+typedef struct{
   State **stack;
   int capacity;
   int top;
