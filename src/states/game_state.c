@@ -4,6 +4,7 @@
 
 #define GLEW_STATIC
 #include <GL\glew.h>
+#include <GLFW\glfw3.h>
 #define CGLM_ALL_UNALIGNED
 #include <cglm\cglm.h>
 #include <cglm\struct.h>
@@ -11,6 +12,7 @@
 #include "../renderer/shader.h"
 #include "../renderer/texture.h"
 #include "../camera.h"
+#include "../main.h"
 
 const float cube_vertices[] = {
   // front
@@ -54,39 +56,20 @@ const unsigned int cube_indices[] = {
   20, 21, 22, 22, 23, 20
 };
 
-const char* cube_vertex_shader_source = "#version 330 core\n"
-  "layout (location = 0) in vec3 position;\n"
-  "layout (location = 1) in float brightness;\n"
-  "out float vBrightness;\n"
-  "out vec2 vTexCoord;\n"
-  "uniform mat4 projection;\n"
-  "uniform mat4 view;\n"
-  "uniform mat4 model;\n"
-  "void main(){\n"
-  "  gl_Position = projection * view * model * vec4(position, 1.0);\n"
-  "  vBrightness = brightness;\n"
-  "  if(brightness < 1.12){\n"
-  "    vTexCoord = position.zy;\n"
-  "  }else if(brightness < 1.22){\n"
-  "    vTexCoord = position.xy;\n"
-  "  }else{\n"
-  "    vTexCoord = position.xz;\n"
-  "  }\n"
-  "}";
+const char* cube_vertex_shader_source = ""
+  #include "../shaders/cube.vs"
+;
 
-const char* cube_fragment_shader_source = "#version 330 core\n"
-  "out vec4 FragColor;\n"
-  "in float vBrightness;\n"
-  "in vec2 vTexCoord;\n"
-  "uniform sampler2D texture1;\n"
-  "void main(){\n"
-  "  FragColor = texture(texture1, vTexCoord) * vec4(vec3(vBrightness), 1.0);\n"
-  "}";
+const char* cube_fragment_shader_source = ""
+  #include "../shaders/cube.fs"
+;
 
 unsigned int VAO, VBO, EBO, shader, texture, modelLoc, projectionLoc, viewLoc;
 
 void game_state_init(){
   printf("game state init\n");
+
+  glfwSetInputMode(cengine.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
@@ -135,6 +118,8 @@ void game_state_destroy(){
   glDeleteVertexArrays(1, &VAO);
   glDeleteBuffers(1, &VBO);
   glDeleteBuffers(1, &EBO);
+
+  glfwSetInputMode(cengine.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
 void game_state_update(float deltaTime){

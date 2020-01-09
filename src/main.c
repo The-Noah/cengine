@@ -9,15 +9,15 @@
 #include "states/game_state.h"
 #include "states/menu_state.h"
 
-CEngine cengine;
 double deltaTime = 0.0;
 char firstMouse = 1;
 float lastX = 400.0f, lastY = 300.0f;
 
+CEngine cengine;
 State game_state;
 
 char escPress = 0;
-char f1Press = 0;
+char mousePress = 0;
 void processInput(GLFWwindow *window){
   if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
     escPress = 1;
@@ -25,13 +25,17 @@ void processInput(GLFWwindow *window){
     state_manager_pop(&cengine.state_manager);
     escPress = 0;
   }
-  if(glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS){
-    f1Press = 1;
-  }else if(f1Press == 1 && glfwGetKey(window, GLFW_KEY_F1) == GLFW_RELEASE){
+  if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS){
+    mousePress = 1;
+  }else if(mousePress == 1 && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE){
     if(cengine.state_manager.top < 1){
       state_manager_push(&cengine.state_manager, &game_state);
     }
-    f1Press = 0;
+    mousePress = 0;
+  }
+
+  if(cengine.state_manager.top < 1){
+    return;
   }
 
   const float camera_speed = 5.0f * deltaTime;
@@ -50,6 +54,10 @@ void processInput(GLFWwindow *window){
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos){
+  if(cengine.state_manager.top < 1){
+    return;
+  }
+
   if(firstMouse){
     lastX = xpos;
     lastY = ypos;
@@ -87,7 +95,6 @@ int main(){
   }
 
   glfwSetCursorPosCallback(cengine.window, mouse_callback);
-  glfwSetInputMode(cengine.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
   State menu_state;
   menu_state.init = menu_state_init;
