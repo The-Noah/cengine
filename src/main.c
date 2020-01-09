@@ -1,35 +1,24 @@
 #include <stdio.h>
-#include <stdbool.h>
 #include <math.h>
 
 #define GLEW_STATIC
 #include <GL\glew.h>
 #include <GLFW\glfw3.h>
-#define CGLM_ALL_UNALIGNED
-#include <cglm\cglm.h>
-#include <cglm\struct.h>
 
-#include "renderer/shader.h"
-#include "renderer/texture.h"
+#include "cengine.h"
 #include "camera.h"
-#include "state_manager.h"
 #include "states/game_state.h"
 
-GLFWwindow* window;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
-bool firstMouse = true;
+char firstMouse = 1;
 float lastX = 400.0f, lastY = 300.0f;
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height){
-  glViewport(0, 0, width, height);
-}
 
 void processInput(GLFWwindow *window){
   if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
     glfwSetWindowShouldClose(window, 1);
   }
-  const float camera_speed = 3.0f * deltaTime;
+  const float camera_speed = 5.0f * deltaTime;
   if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
     camera_move_forward(camera_speed);
   }
@@ -48,7 +37,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos){
   if(firstMouse){
     lastX = xpos;
     lastY = ypos;
-    firstMouse = false;
+    firstMouse = 0;
   }
 
   float xoffset = xpos - lastX;
@@ -75,44 +64,15 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos){
 int main(){
   printf("starting\n");
 
-  if(glfwInit() != GLFW_TRUE){
-    fprintf(stderr, "failed to init glfw\n");
-    return -1;
+  struct CEngineOptions options = {0};
+  CEngine cengine;
+  int init_status = cengine_init(&cengine, &options);
+  if(init_status < 0){
+    return init_status;
   }
 
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-  #ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-  #endif
-
-  window = glfwCreateWindow(800, 600, "cengine", NULL, NULL);
-  if(window == NULL){
-    fprintf(stderr, "failed to create window\n");
-    glfwTerminate();
-    return -1;
-  }
-
-  glfwMakeContextCurrent(window);
-  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-  glfwSetCursorPosCallback(window, mouse_callback);
-
-  glViewport(0, 0, 800, 600);
-  glEnable(GL_DEPTH_TEST);
-  glEnable(GL_CULL_FACE);
-
-  glewExperimental = GL_TRUE;
-  GLenum err = glewInit();
-  if(err != GLEW_OK){
-    fprintf(stderr, "glew failed to init: %s\n", glewGetErrorString(err));
-    return -1;
-  }
-
-  StateManager state_manager;
-  state_manager_init(&state_manager);
+  glfwSetCursorPosCallback(cengine.window, mouse_callback);
+  glfwSetInputMode(cengine.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
   State game_state;
   game_state.init = game_state_init;
@@ -120,31 +80,32 @@ int main(){
   game_state.update = game_state_update;
   game_state.draw = game_state_draw;
 
-  state_manager_push(&state_manager, &game_state);
+  state_manager_push(&cengine.state_manager, &game_state);
 
   camera_init();
 
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // wireframe;
-  while(!glfwWindowShouldClose(window)){
+  while(!cengine.quit){
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
 
-    processInput(window);
+    cengine_update(&cengine);
 
-    state_manager_update(&state_manager, deltaTime);
+    processInput(cengine.window);
+
+    state_manager_update(&cengine.state_manager, deltaTime);
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    state_manager_draw(&state_manager);
+    state_manager_draw(&cengine.state_manager);
 
-    glfwSwapBuffers(window);
+    glfwSwapBuffers(cengine.window);
     glfwPollEvents();
   }
 
-  state_manager_free(&state_manager);
+  cengine_free(&cengine);
 
-  glfwTerminate();
   return 0;
 }
