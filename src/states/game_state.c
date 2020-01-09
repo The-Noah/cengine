@@ -138,7 +138,6 @@ void game_state_destroy(){
 }
 
 void game_state_update(float deltaTime){
-  camera_update();
 }
 
 void game_state_draw(){

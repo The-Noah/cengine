@@ -120,7 +120,7 @@ int main(){
 
   state_manager_push(&state_manager, &game_state);
 
-  camera_update_rotation();
+  camera_init();
 
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // wireframe;
   while(!glfwWindowShouldClose(window)){
