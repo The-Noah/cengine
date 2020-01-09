@@ -100,7 +100,9 @@ int main(){
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetCursorPosCallback(window, mouse_callback);
 
+  glViewport(0, 0, 800, 600);
   glEnable(GL_DEPTH_TEST);
+  glEnable(GL_CULL_FACE);
 
   glewExperimental = GL_TRUE;
   GLenum err = glewInit();
@@ -112,7 +114,7 @@ int main(){
   StateManager state_manager;
   state_manager_init(&state_manager);
 
-  State game_state = {0};
+  State game_state;
   game_state.init = game_state_init;
   game_state.destroy = game_state_destroy;
   game_state.update = game_state_update;

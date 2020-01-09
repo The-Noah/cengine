@@ -31,7 +31,7 @@ int state_manager_push(StateManager *state_manager, State *state){
   state_manager->top++;
   state_manager->stack[state_manager->top] = state;
   if(state->init != NULL){
-    state -> init();
+    state->init();
   }
 
   return state_manager->top;
@@ -44,7 +44,7 @@ int state_manager_pop(StateManager *state_manager){
 
   State *top = state_manager_top(state_manager);
   if(top->destroy != NULL){
-    top -> destroy();
+    top->destroy();
   }
 
   state_manager->stack[state_manager->top] = NULL;
@@ -67,5 +67,5 @@ void state_manager_draw(StateManager *state_manager){
 }
 
 State *state_manager_top(StateManager *state_manager){
-  return state_manager -> stack[state_manager -> top];
+  return state_manager->stack[state_manager->top];
 }
