@@ -7,15 +7,33 @@
 #include "cengine.h"
 #include "camera.h"
 #include "states/game_state.h"
+#include "states/menu_state.h"
 
+CEngine cengine;
 double deltaTime = 0.0;
 char firstMouse = 1;
 float lastX = 400.0f, lastY = 300.0f;
 
+State game_state;
+
+char escPress = 0;
+char f1Press = 0;
 void processInput(GLFWwindow *window){
   if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
-    glfwSetWindowShouldClose(window, 1);
+    escPress = 1;
+  }else if(escPress == 1 && glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_RELEASE){
+    state_manager_pop(&cengine.state_manager);
+    escPress = 0;
   }
+  if(glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS){
+    f1Press = 1;
+  }else if(f1Press == 1 && glfwGetKey(window, GLFW_KEY_F1) == GLFW_RELEASE){
+    if(cengine.state_manager.top < 1){
+      state_manager_push(&cengine.state_manager, &game_state);
+    }
+    f1Press = 0;
+  }
+
   const float camera_speed = 5.0f * deltaTime;
   if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
     camera_move_forward(camera_speed);
@@ -63,7 +81,6 @@ int main(){
   printf("starting\n");
 
   struct CEngineOptions options = {0};
-  CEngine cengine;
   int init_status = cengine_init(&cengine, &options);
   if(init_status < 0){
     return init_status;
@@ -72,13 +89,17 @@ int main(){
   glfwSetCursorPosCallback(cengine.window, mouse_callback);
   glfwSetInputMode(cengine.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-  State game_state;
+  State menu_state;
+  menu_state.init = menu_state_init;
+  menu_state.destroy = menu_state_destroy;
+  menu_state.update = menu_state_update;
+  menu_state.draw = menu_state_draw;
+  state_manager_push(&cengine.state_manager, &menu_state);
+
   game_state.init = game_state_init;
   game_state.destroy = game_state_destroy;
   game_state.update = game_state_update;
   game_state.draw = game_state_draw;
-
-  state_manager_push(&cengine.state_manager, &game_state);
 
   camera_init();
 
@@ -105,13 +126,17 @@ int main(){
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     state_manager_draw(&cengine.state_manager);
+
+    if(cengine.state_manager.top == -1){
+      glfwSetWindowShouldClose(cengine.window, 1);
+    }
 
     glfwSwapBuffers(cengine.window);
     glfwPollEvents();
   }
 
+  printf("end\n");
   cengine_free(&cengine);
 
   return 0;

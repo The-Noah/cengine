@@ -53,6 +53,9 @@ int state_manager_pop(StateManager *state_manager){
 }
 
 void state_manager_update(StateManager *state_manager, float deltatime){
+  if(state_manager->top < 0){
+    return;
+  }
   State *state = state_manager_top(state_manager);
   if(state->update != NULL){
     state->update(deltatime);
@@ -60,6 +63,9 @@ void state_manager_update(StateManager *state_manager, float deltatime){
 }
 
 void state_manager_draw(StateManager *state_manager){
+  if(state_manager->top < 0){
+    return;
+  }
   State *state = state_manager_top(state_manager);
   if(state->draw != NULL){
     state->draw();

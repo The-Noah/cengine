@@ -54,7 +54,7 @@ const unsigned int cube_indices[] = {
   20, 21, 22, 22, 23, 20
 };
 
-const char* vertex_shader_source = "#version 330 core\n"
+const char* cube_vertex_shader_source = "#version 330 core\n"
   "layout (location = 0) in vec3 position;\n"
   "layout (location = 1) in float brightness;\n"
   "out float vBrightness;\n"
@@ -74,7 +74,7 @@ const char* vertex_shader_source = "#version 330 core\n"
   "  }\n"
   "}";
 
-const char* fragment_shader_source = "#version 330 core\n"
+const char* cube_fragment_shader_source = "#version 330 core\n"
   "out vec4 FragColor;\n"
   "in float vBrightness;\n"
   "in vec2 vTexCoord;\n"
@@ -107,7 +107,7 @@ void game_state_init(){
   glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
 
-  shader = shader_create(vertex_shader_source, fragment_shader_source);
+  shader = shader_create(cube_vertex_shader_source, cube_fragment_shader_source);
   shader_bind(shader);
 
   glActiveTexture(GL_TEXTURE0);
