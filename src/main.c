@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <math.h>
 
 #define GLEW_STATIC
 #include <GL\glew.h>
@@ -9,8 +8,7 @@
 #include "camera.h"
 #include "states/game_state.h"
 
-float deltaTime = 0.0f;
-float lastFrame = 0.0f;
+double deltaTime = 0.0;
 char firstMouse = 1;
 float lastX = 400.0f, lastY = 300.0f;
 
@@ -84,11 +82,20 @@ int main(){
 
   camera_init();
 
+  double lastPrintTime;
+  double lastTime = lastPrintTime = glfwGetTime();
+  unsigned short frames = 0;
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // wireframe;
   while(!cengine.quit){
-    float currentFrame = glfwGetTime();
-    deltaTime = currentFrame - lastFrame;
-    lastFrame = currentFrame;
+    double currentTime = glfwGetTime();
+    deltaTime = currentTime - lastTime;
+    lastTime = currentTime;
+    frames++;
+    if(currentTime - lastPrintTime >= 1.0){
+      printf("%fms (%dfps)\n", 1000.0/(double)frames, frames);
+      frames = 0;
+      lastPrintTime += 1.0;
+    }
 
     cengine_update(&cengine);
 
