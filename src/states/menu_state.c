@@ -19,7 +19,7 @@ const float quad_vertices[] = {
    0.25f, -0.1f
 };
 
-const unsigned int quad_indices[] = {
+const unsigned char quad_indices[] = {
   0, 1, 2, 2, 3, 0
 };
 
@@ -78,5 +78,5 @@ void menu_state_draw(){
   shader_bind(menu_shader);
 
   glBindVertexArray(menu_VAO);
-  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, 0);
 }

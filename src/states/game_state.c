@@ -48,7 +48,7 @@ const float cube_vertices[] = {
   0.0f, 0.0f, 1.0f, 1.3f
 };
 
-const unsigned int cube_indices[] = {
+const unsigned char cube_indices[] = {
   0, 1, 2, 2, 3, 0,
   4, 5, 6, 6, 7, 4,
   8, 9, 10, 10, 11, 8,
@@ -133,5 +133,5 @@ void game_state_draw(){
   glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view[0]);
 
   glBindVertexArray(VAO);
-  glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, 0);
 }
