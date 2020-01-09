@@ -2,8 +2,6 @@ workspace "cengine"
   configurations {"Debug", "Release"}
 
 project "cengine"
-  -- kind "WindowedApp"
-  kind "ConsoleApp"
   language "C"
   targetdir "bin/%{cfg.buildcfg}" 
 
@@ -17,10 +15,12 @@ project "cengine"
   filter "configurations:Debug"
     defines {"DEBUG"}
     symbols "On"
+    kind "ConsoleApp"
 
   filter "configurations:Release"
     defines {"NDEBUG"}
     optimize "Speed"
+    kind "WindowedApp"
 
   filter {"system:windows"}
 		links {"opengl32"}
