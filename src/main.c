@@ -9,8 +9,8 @@
 #include <cglm\cglm.h>
 #include <cglm\struct.h>
 
-#include "shader.h"
-#include "texture.h"
+#include "renderer/shader.h"
+#include "renderer/texture.h"
 #include "camera.h"
 
 GLFWwindow* window;
