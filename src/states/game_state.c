@@ -14,6 +14,7 @@
 #include "../camera.h"
 #include "../main.h"
 #include "../textures.h"
+#include "../skybox.h"
 
 const float cube_vertices[] = {
   // front
@@ -66,6 +67,7 @@ const char* cube_fragment_shader_source = ""
 ;
 
 unsigned int VAO, VBO, EBO, shader, texture, modelLoc, projectionLoc, viewLoc;
+Skybox skybox;
 
 void game_state_init(){
   printf("game state init\n");
@@ -108,6 +110,12 @@ void game_state_init(){
   glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, projection[0]);
 
   viewLoc = glGetUniformLocation(shader, "view");
+
+  mat4 skybox_proj = GLMS_MAT4_IDENTITY_INIT;
+  glm_mat4_mul(skybox_proj, projection, skybox_proj);
+
+  skybox_init(skybox_proj[0]);
+  skybox_create(&skybox);
 }
 
 void game_state_destroy(){
@@ -119,6 +127,9 @@ void game_state_destroy(){
   glDeleteVertexArrays(1, &VAO);
   glDeleteBuffers(1, &VBO);
   glDeleteBuffers(1, &EBO);
+
+  skybox_delete(&skybox);
+  skybox_free();
 
   glfwSetInputMode(cengine.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
@@ -134,4 +145,6 @@ void game_state_draw(){
 
   glBindVertexArray(VAO);
   glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, 0);
+
+  skybox_draw(&skybox);
 }

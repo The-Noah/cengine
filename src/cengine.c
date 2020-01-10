@@ -40,7 +40,11 @@ int cengine_init(CEngine *cengine, struct CEngineOptions *options){
 
   glViewport(0, 0, 800, 600);
   glEnable(GL_DEPTH_TEST);
+  glEnable(GL_TEXTURE_2D);
   glEnable(GL_CULL_FACE);
+  glCullFace(GL_BACK);
+  glDepthFunc(GL_LESS);
+  glClearColor(0.3f, 0.6f, 0.8f, 1.0f);
 
   glewExperimental = GL_TRUE;
   GLenum err = glewInit();

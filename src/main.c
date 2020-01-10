@@ -131,7 +131,6 @@ int main(){
 
     state_manager_update(&cengine.state_manager, deltaTime);
 
-    glClearColor(0.3f, 0.6f, 0.8f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     state_manager_draw(&cengine.state_manager);
 

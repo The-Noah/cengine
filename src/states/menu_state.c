@@ -31,7 +31,7 @@ const char* fragment_shader_source = ""
   #include "../shaders/basic.fs"
 ;
 
-unsigned int menu_VAO, menu_VBO, menu_EBO, menu_shader, menu_modelLoc, menu_projectionLoc, menu_viewLoc;
+unsigned int menu_VAO, menu_VBO, menu_EBO, menu_shader, menu_modelLoc;
 
 void menu_state_init(){
   printf("menu state init\n");
