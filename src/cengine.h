@@ -11,6 +11,7 @@ struct CEngineOptions{
   char *title;
   int width;
   int height;
+  unsigned char antialiasing;
 };
 
 typedef struct{
