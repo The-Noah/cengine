@@ -8,7 +8,7 @@ unsigned int texture_create(texture_id texture_index){
   glGenTextures(1, &texture);
   texture_bind(texture);
 
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textures[texture_index].width, textures[texture_index].height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textures[texture_index].pixel_data);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB_ALPHA, textures[texture_index].width, textures[texture_index].height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textures[texture_index].pixel_data);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 

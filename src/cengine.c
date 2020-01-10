@@ -49,6 +49,7 @@ int cengine_init(CEngine *cengine, struct CEngineOptions *options){
   glCullFace(GL_BACK);
   glEnable(GL_TEXTURE_2D);
   glEnable(GL_MULTISAMPLE);
+  glEnable(GL_FRAMEBUFFER_SRGB);
   glClearColor(0.3f, 0.6f, 0.8f, 1.0f);
 
   glewExperimental = GL_TRUE;
