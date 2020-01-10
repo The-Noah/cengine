@@ -10,9 +10,9 @@
 
 unsigned int skybox_shader;
 
-#define SKYBOX_SIZE 50.0f
+#define SKYBOX_SIZE 50
 
-const float skybox_vertices[] = {
+const char skybox_vertices[] = {
    SKYBOX_SIZE,  SKYBOX_SIZE,  SKYBOX_SIZE,
   -SKYBOX_SIZE,  SKYBOX_SIZE,  SKYBOX_SIZE,
   -SKYBOX_SIZE, -SKYBOX_SIZE,  SKYBOX_SIZE,
@@ -81,7 +81,7 @@ void skybox_create(Skybox *skybox){
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(skybox_indices), skybox_indices, GL_STATIC_DRAW);
 
   // position
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+  glVertexAttribPointer(0, 3, GL_BYTE, GL_FALSE, 3 * sizeof(char), (void*)0);
   glEnableVertexAttribArray(0);
 
   glBindVertexArray(0);
