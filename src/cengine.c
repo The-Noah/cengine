@@ -2,10 +2,12 @@
 
 #include <stdio.h>
 
-GLFWwindow* window;
+#include "main.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
   glViewport(0, 0, width, height);
+  cengine.width = width;
+  cengine.height = height;
 }
 
 int cengine_init(CEngine *cengine, struct CEngineOptions *options){
@@ -27,12 +29,15 @@ int cengine_init(CEngine *cengine, struct CEngineOptions *options){
     options->antialiasing = 4;
   }
 
+  cengine->width = options->width;
+  cengine->height = options->height;
+
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_SAMPLES, options->antialiasing);
 
-  cengine->window = glfwCreateWindow(options->width, options->height, options->title, NULL, NULL);
+  cengine->window = glfwCreateWindow(cengine->width, cengine->height, options->title, NULL, NULL);
   if(cengine->window == NULL){
     fprintf(stderr, "failed to create window\n");
     glfwTerminate();

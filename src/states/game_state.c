@@ -15,6 +15,7 @@
 #include "../main.h"
 #include "../textures.h"
 #include "../skybox.h"
+#include "../cengine.h"
 
 const float cube_vertices[] = {
   // front
@@ -66,7 +67,7 @@ const char* cube_fragment_shader_source = ""
   #include "../shaders/standard.fs"
 ;
 
-unsigned int VAO, VBO, EBO, shader, texture, viewLoc, cameraPosition_location;
+unsigned int VAO, VBO, EBO, shader, texture, projection_location, viewLoc, cameraPosition_location;
 Skybox skybox;
 
 void game_state_init(){
@@ -110,21 +111,16 @@ void game_state_init(){
   glm_translate(model, (vec3){0.0f, 0.0f, 0.0f});
   shader_uniform_matrix4fv(shader, "model", model[0]);
 
-  mat4 projection = GLMS_MAT4_IDENTITY_INIT;
-  glm_perspective(glm_rad(65.0f), 800.0f/600.0f, 0.1f, 100.0f, projection);
-  shader_uniform_matrix4fv(shader, "projection", projection[0]);
+  projection_location = shader_uniform_position(shader, "projection");
 
-  viewLoc = glGetUniformLocation(shader, "view");
-  cameraPosition_location = glGetUniformLocation(shader, "cameraPosition");
+  viewLoc = shader_uniform_position(shader, "view");
+  cameraPosition_location = shader_uniform_position(shader, "cameraPosition");
   shader_uniform1f(shader, "material.ambient", 0.1f);
   shader_uniform1f(shader, "material.diffuse", 1.0f);
   shader_uniform1f(shader, "material.specular", 0.5f);
   shader_uniform1f(shader, "material.shininess", 16.0f);
 
-  mat4 skybox_proj = GLMS_MAT4_IDENTITY_INIT;
-  glm_mat4_mul(skybox_proj, projection, skybox_proj);
-
-  skybox_init(skybox_proj[0]);
+  skybox_init();
   skybox_create(&skybox);
 }
 
@@ -151,11 +147,16 @@ void game_state_draw(){
   texture_bind(texture);
   shader_bind(shader);
 
+  mat4 projection = GLMS_MAT4_IDENTITY_INIT;
+  glm_perspective(glm_rad(65.0f), (float)cengine.width/(float)cengine.height, 0.1f, 100.0f, projection);
+  shader_uniform_matrix4fv_at(projection_location, projection[0]);
+
   glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view[0]);
   glUniform3fv(cameraPosition_location, 1, camera_position);
 
   glBindVertexArray(VAO);
   glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, 0);
 
+  skybox_projection(projection[0]);
   skybox_draw(&skybox);
 }

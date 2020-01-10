@@ -8,7 +8,7 @@
 #include "renderer/shader.h"
 #include "camera.h"
 
-unsigned int skybox_shader;
+unsigned int skybox_shader, skybox_projection_location, skybox_view_location;
 
 #define SKYBOX_SIZE 50
 
@@ -56,14 +56,19 @@ const char* skybox_fragment_shader_source = ""
   #include "shaders/skybox.fs"
 ;
 
-void skybox_init(float* projection_matrix){
+void skybox_init(){
   skybox_shader = shader_create(skybox_vertex_shader_source, skybox_fragment_shader_source);
-  shader_bind(skybox_shader);
-  glUniformMatrix4fv(glGetUniformLocation(skybox_shader, "projection"), 1, GL_FALSE, projection_matrix);
+  skybox_projection_location = shader_uniform_position(skybox_shader, "projection");
+  skybox_view_location = shader_uniform_position(skybox_shader, "view");
 }
 
 void skybox_free(){
   shader_delete(skybox_shader);
+}
+
+void skybox_projection(float* projection_matrix){
+  shader_bind(skybox_shader);
+  shader_uniform_matrix4fv_at(skybox_projection_location, projection_matrix);
 }
 
 void skybox_create(Skybox *skybox){
@@ -95,7 +100,7 @@ void skybox_delete(Skybox *skybox){
 
 void skybox_draw(Skybox *skybox){
   shader_bind(skybox_shader);
-  glUniformMatrix4fv(glGetUniformLocation(skybox_shader, "view"), 1, GL_FALSE, view[0]);
+  shader_uniform_matrix4fv_at(skybox_view_location, view[0]);
 
   glBindVertexArray(skybox->vao);
   glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, 0);
