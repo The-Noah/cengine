@@ -18,35 +18,35 @@
 
 const float cube_vertices[] = {
   // front
-  1.0f, 1.0f, 1.0f, 1.2f,
-  0.0f, 1.0f, 1.0f, 1.2f,
-  0.0f, 0.0f, 1.0f, 1.2f,
-  1.0f, 0.0f, 1.0f, 1.2f,
+   0.5f,  0.5f,  0.5f, 1.1f,  0.0f,  0.0f,  1.0f,
+  -0.5f,  0.5f,  0.5f, 1.1f,  0.0f,  0.0f,  1.0f,
+  -0.5f, -0.5f,  0.5f, 1.1f,  0.0f,  0.0f,  1.0f,
+   0.5f, -0.5f,  0.5f, 1.1f,  0.0f,  0.0f,  1.0f,
   // back
-  0.0f, 1.0f, 0.0f, 1.2f,
-  1.0f, 1.0f, 0.0f, 1.2f,
-  1.0f, 0.0f, 0.0f, 1.2f,
-  0.0f, 0.0f, 0.0f, 1.2f,
+  -0.5f,  0.5f, -0.5f, 1.1f,  0.0f,  0.0f, -1.0f,
+   0.5f,  0.5f, -0.5f, 1.1f,  0.0f,  0.0f, -1.0f,
+   0.5f, -0.5f, -0.5f, 1.1f,  0.0f,  0.0f, -1.0f,
+  -0.5f, -0.5f, -0.5f, 1.1f,  0.0f,  0.0f, -1.0f,
   // left
-  0.0f, 1.0f, 1.0f, 1.1f,
-  0.0f, 1.0f, 0.0f, 1.1f,
-  0.0f, 0.0f, 0.0f, 1.1f,
-  0.0f, 0.0f, 1.0f, 1.1f,
+  -0.5f,  0.5f,  0.5f, 1.0f, -1.0f,  0.0f,  0.0f,
+  -0.5f,  0.5f, -0.5f, 1.0f, -1.0f,  0.0f,  0.0f,
+  -0.5f, -0.5f, -0.5f, 1.0f, -1.0f,  0.0f,  0.0f,
+  -0.5f, -0.5f,  0.5f, 1.0f, -1.0f,  0.0f,  0.0f,
   // right
-  1.0f, 1.0f, 0.0f, 1.1f,
-  1.0f, 1.0f, 1.0f, 1.1f,
-  1.0f, 0.0f, 1.0f, 1.1f,
-  1.0f, 0.0f, 0.0f, 1.1f,
+   0.5f,  0.5f, -0.5f, 1.0f,  1.0f,  0.0f,  0.0f,
+   0.5f,  0.5f,  0.5f, 1.0f,  1.0f,  0.0f,  0.0f,
+   0.5f, -0.5f,  0.5f, 1.0f,  1.0f,  0.0f,  0.0f,
+   0.5f, -0.5f, -0.5f, 1.0f,  1.0f,  0.0f,  0.0f,
   // top
-  1.0f, 1.0f, 0.0f, 1.3f,
-  0.0f, 1.0f, 0.0f, 1.3f,
-  0.0f, 1.0f, 1.0f, 1.3f,
-  1.0f, 1.0f, 1.0f, 1.3f,
+   0.5f,  0.5f, -0.5f, 1.2f,  0.0f,  1.0f,  0.0f,
+  -0.5f,  0.5f, -0.5f, 1.2f,  0.0f,  1.0f,  0.0f,
+  -0.5f,  0.5f,  0.5f, 1.2f,  0.0f,  1.0f,  0.0f,
+   0.5f,  0.5f,  0.5f, 1.2f,  0.0f,  1.0f,  0.0f,
   // bottom
-  0.0f, 0.0f, 0.0f, 1.3f,
-  1.0f, 0.0f, 0.0f, 1.3f,
-  1.0f, 0.0f, 1.0f, 1.3f,
-  0.0f, 0.0f, 1.0f, 1.3f
+  -0.5f, -0.5f, -0.5f, 1.2f,  0.0f, -1.0f,  0.0f,
+   0.5f, -0.5f, -0.5f, 1.2f,  0.0f, -1.0f,  0.0f,
+   0.5f, -0.5f,  0.5f, 1.2f,  0.0f, -1.0f,  0.0f,
+  -0.5f, -0.5f,  0.5f, 1.2f,  0.0f, -1.0f,  0.0f
 };
 
 const unsigned char cube_indices[] = {
@@ -59,14 +59,14 @@ const unsigned char cube_indices[] = {
 };
 
 const char* cube_vertex_shader_source = ""
-  #include "../shaders/cube.vs"
+  #include "../shaders/standard.vs"
 ;
 
 const char* cube_fragment_shader_source = ""
-  #include "../shaders/cube.fs"
+  #include "../shaders/standard.fs"
 ;
 
-unsigned int VAO, VBO, EBO, shader, texture, modelLoc, projectionLoc, viewLoc;
+unsigned int VAO, VBO, EBO, shader, texture, modelLoc, projectionLoc, viewLoc, cameraPosition_location;
 Skybox skybox;
 
 void game_state_init(){
@@ -87,11 +87,14 @@ void game_state_init(){
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_indices), cube_indices, GL_STATIC_DRAW);
 
   // position
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
   // brightness
-  glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(3 * sizeof(float)));
+  glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
+  // normal
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(4 * sizeof(float)));
+  glEnableVertexAttribArray(2);
 
   glBindVertexArray(0);
   glDeleteBuffers(1, &VBO);
@@ -114,6 +117,11 @@ void game_state_init(){
   glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, projection[0]);
 
   viewLoc = glGetUniformLocation(shader, "view");
+  cameraPosition_location = glGetUniformLocation(shader, "cameraPosition");
+  glUniform1f(glGetUniformLocation(shader, "material.ambient"), 0.1f);
+  glUniform1f(glGetUniformLocation(shader, "material.diffuse"), 1.0f);
+  glUniform1f(glGetUniformLocation(shader, "material.specular"), 0.5f);
+  glUniform1f(glGetUniformLocation(shader, "material.shininess"), 16.0f);
 
   mat4 skybox_proj = GLMS_MAT4_IDENTITY_INIT;
   glm_mat4_mul(skybox_proj, projection, skybox_proj);
@@ -146,6 +154,7 @@ void game_state_draw(){
   shader_bind(shader);
 
   glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view[0]);
+  glUniform3fv(cameraPosition_location, 1, camera_position);
 
   glBindVertexArray(VAO);
   glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, 0);
