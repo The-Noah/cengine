@@ -36,3 +36,13 @@ void shader_delete(unsigned int shader){
   glDeleteProgram(shader);
   shader = 0;
 }
+
+// uniform setters
+
+void shader_uniform1f(unsigned int shader, const char* name, float value){
+  glUniform1f(glGetUniformLocation(shader, name), value);
+}
+
+void shader_uniform_matrix4fv(unsigned int shader, const char* name, float* value){
+  glUniformMatrix4fv(glGetUniformLocation(shader, name), 1, GL_FALSE, value);
+}

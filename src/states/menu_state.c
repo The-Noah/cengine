@@ -31,7 +31,7 @@ const char* fragment_shader_source = ""
   #include "../shaders/basic.fs"
 ;
 
-unsigned int menu_VAO, menu_VBO, menu_EBO, menu_shader, menu_modelLoc;
+unsigned int menu_VAO, menu_VBO, menu_EBO, menu_shader;
 
 void menu_state_init(){
   printf("menu state init\n");
@@ -59,10 +59,9 @@ void menu_state_init(){
   menu_shader = shader_create(vertex_shader_source, fragment_shader_source);
   shader_bind(menu_shader);
 
-  menu_modelLoc = glGetUniformLocation(menu_shader, "model");
   mat4 model = GLMS_MAT4_IDENTITY_INIT;
   glm_translate(model, (vec3){0.0f, 0.0f, 0.0f});
-  glUniformMatrix4fv(menu_modelLoc, 1, GL_FALSE, (float*)model);
+  shader_uniform_matrix4fv(menu_shader, "model", model[0]);
 }
 
 void menu_state_destroy(){

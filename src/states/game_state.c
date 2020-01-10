@@ -66,7 +66,7 @@ const char* cube_fragment_shader_source = ""
   #include "../shaders/standard.fs"
 ;
 
-unsigned int VAO, VBO, EBO, shader, texture, modelLoc, projectionLoc, viewLoc, cameraPosition_location;
+unsigned int VAO, VBO, EBO, shader, texture, viewLoc, cameraPosition_location;
 Skybox skybox;
 
 void game_state_init(){
@@ -106,22 +106,20 @@ void game_state_init(){
   glActiveTexture(GL_TEXTURE0);
   texture = texture_create(GRASS);
 
-  modelLoc = glGetUniformLocation(shader, "model");
   mat4 model = GLMS_MAT4_IDENTITY_INIT;
   glm_translate(model, (vec3){0.0f, 0.0f, 0.0f});
-  glUniformMatrix4fv(modelLoc, 1, GL_FALSE, (float*)model);
+  shader_uniform_matrix4fv(shader, "model", model[0]);
 
-  projectionLoc = glGetUniformLocation(shader, "projection");
   mat4 projection = GLMS_MAT4_IDENTITY_INIT;
   glm_perspective(glm_rad(65.0f), 800.0f/600.0f, 0.1f, 100.0f, projection);
-  glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, projection[0]);
+  shader_uniform_matrix4fv(shader, "projection", projection[0]);
 
   viewLoc = glGetUniformLocation(shader, "view");
   cameraPosition_location = glGetUniformLocation(shader, "cameraPosition");
-  glUniform1f(glGetUniformLocation(shader, "material.ambient"), 0.1f);
-  glUniform1f(glGetUniformLocation(shader, "material.diffuse"), 1.0f);
-  glUniform1f(glGetUniformLocation(shader, "material.specular"), 0.5f);
-  glUniform1f(glGetUniformLocation(shader, "material.shininess"), 16.0f);
+  shader_uniform1f(shader, "material.ambient", 0.1f);
+  shader_uniform1f(shader, "material.diffuse", 1.0f);
+  shader_uniform1f(shader, "material.specular", 0.5f);
+  shader_uniform1f(shader, "material.shininess", 16.0f);
 
   mat4 skybox_proj = GLMS_MAT4_IDENTITY_INIT;
   glm_mat4_mul(skybox_proj, projection, skybox_proj);
