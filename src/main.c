@@ -1,3 +1,5 @@
+#include "main.h"
+
 #include <stdio.h>
 
 #define GLEW_STATIC
@@ -22,7 +24,7 @@ void processInput(GLFWwindow *window){
   if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
     escPress = 1;
   }else if(escPress == 1 && glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_RELEASE){
-    state_manager_pop(&cengine.state_manager);
+    char s = state_manager_pop(&cengine.state_manager);
     escPress = 0;
   }
   if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS){

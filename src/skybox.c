@@ -91,7 +91,6 @@ void skybox_create(Skybox *skybox){
 
 void skybox_delete(Skybox *skybox){
   glDeleteVertexArrays(1, &skybox->vao);
-  free(skybox);
 }
 
 void skybox_draw(Skybox *skybox){
