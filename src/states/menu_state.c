@@ -52,6 +52,10 @@ void menu_state_init(){
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
 
+  glBindVertexArray(0);
+  glDeleteBuffers(1, &menu_VBO);
+  glDeleteBuffers(1, &menu_EBO);
+
   menu_shader = shader_create(vertex_shader_source, fragment_shader_source);
   shader_bind(menu_shader);
 

@@ -93,6 +93,10 @@ void game_state_init(){
   glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
 
+  glBindVertexArray(0);
+  glDeleteBuffers(1, &VBO);
+  glDeleteBuffers(1, &EBO);
+
   shader = shader_create(cube_vertex_shader_source, cube_fragment_shader_source);
   shader_bind(shader);
 
