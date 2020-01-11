@@ -6,7 +6,7 @@
 unsigned int texture_create(texture_id texture_index){
   unsigned int texture;
   glGenTextures(1, &texture);
-  texture_bind(texture);
+  texture_bind(texture, 0);
 
   struct texture *texture_data = textures_get(texture_index);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB, texture_data->width, texture_data->height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture_data->pixel_data);
@@ -17,7 +17,8 @@ unsigned int texture_create(texture_id texture_index){
   return texture;
 }
 
-void texture_bind(unsigned int texture){
+void texture_bind(unsigned int texture, unsigned char index){
+  glActiveTexture(GL_TEXTURE0 + index);
   glBindTexture(GL_TEXTURE_2D, texture);
 }
 

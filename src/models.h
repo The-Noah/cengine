@@ -4,7 +4,7 @@
 typedef enum{
   CUBE = 0,
   PLANE,
-  SHERE,
+  SPHERE,
   MONKEY,
   SPAWN_BEACON
 } model_id;

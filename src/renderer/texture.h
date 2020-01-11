@@ -4,7 +4,7 @@
 #include "../textures.h"
 
 unsigned int texture_create(texture_id texture_index);
-void texture_bind(unsigned int texture);
+void texture_bind(unsigned int texture, unsigned char index);
 void texture_delete(unsigned int *texture);
 
 #endif
