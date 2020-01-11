@@ -114,7 +114,11 @@ void game_state_update(float deltaTime){
 void game_state_draw(){
   texture_bind(texture, 0);
   texture_bind(texture_brickwall_specular, 1);
-  texture_bind(texture_normal, 2);
+  if(use_normal_map == 1){
+    texture_bind(texture_normal, 2);
+  }else{
+    texture_bind(0, 2);
+  }
   shader_bind(shader);
 
   mat4 projection = GLMS_MAT4_IDENTITY_INIT;
@@ -129,7 +133,11 @@ void game_state_draw(){
   drawable_draw(object);
 
   texture_bind(texture_brickwall, 0);
-  texture_bind(texture_brickwall_normal, 2);
+  if(use_normal_map == 1){
+    texture_bind(texture_brickwall_normal, 2);
+  }else{
+    texture_bind(0, 2);
+  }
 
   glm_scale(model, (vec3){10.0f, 0.0f, 10.0f});
   shader_uniform_matrix4fv(shader, "model", model[0]);
@@ -140,7 +148,7 @@ void game_state_draw(){
   texture_bind(0, 2);
 
   shader_uniform_matrix4fv(shader, "model", light_model[0]);
-  drawable_draw(light);
+  // drawable_draw(light);
 
   skybox_projection(projection[0]);
   skybox_draw(&skybox);
