@@ -96,6 +96,10 @@ void shader_uniform3fv(unsigned int shader, const char* name, float* value){
   glUniform3fv(shader_uniform_position(shader, name), 1, value);
 }
 
+void shader_uniform4fv(unsigned int shader, const char* name, float* value){
+  glUniform4fv(shader_uniform_position(shader, name), 1, value);
+}
+
 void shader_uniform_matrix4fv(unsigned int shader, const char* name, float* value){
   shader_uniform_matrix4fv_at(shader_uniform_position(shader, name), value);
 }

@@ -29,7 +29,9 @@ const char* cube_fragment_shader_source = ""
   #include "../shaders/standard.fs"
 ;
 
-unsigned int shader, texture, texture_specular, texture_normal, projection_location, viewLoc, cameraPosition_location;
+unsigned int shader, projection_location, viewLoc, cameraPosition_location;
+unsigned int texture, texture_normal, texture_brickwall, texture_brickwall_specular, texture_brickwall_normal;
+mat4 light_model = GLMS_MAT4_IDENTITY_INIT;
 Skybox skybox;
 drawable *plane;
 drawable *object;
@@ -48,8 +50,10 @@ void game_state_init(){
   shader_bind(shader);
 
   texture = texture_create(SPAWNBEACON);
-  texture_specular = texture_create(BRICKWALL_SPECULAR);
   texture_normal = texture_create(SPAWNBEACON_NORMAL);
+  texture_brickwall = texture_create(BRICKWALL);
+  texture_brickwall_specular = texture_create(BRICKWALL_SPECULAR);
+  texture_brickwall_normal = texture_create(BRICKWALL_NORMAL);
 
   projection_location = shader_uniform_position(shader, "projection");
 
@@ -59,9 +63,14 @@ void game_state_init(){
   shader_uniform1i(shader, "material.specular_texture", 1);
   shader_uniform1i(shader, "material.normal_texture", 2);
   shader_uniform1f(shader, "material.ambient", 0.2f);
-  shader_uniform1f(shader, "material.diffuse", 1.2f);
-  shader_uniform1f(shader, "material.specular", 1.5f);
+  shader_uniform1f(shader, "material.diffuse", 1.0f);
+  shader_uniform1f(shader, "material.specular", 0.5f);
   shader_uniform1f(shader, "material.shininess", 64.0f);
+
+  glm_translate(light_model, (vec3){1.0f, 10.0f, -0.5f});
+  glm_scale(light_model, (vec3){0.1f, 0.1f, 0.1f});
+
+  shader_uniform4fv(shader, "light.position", (vec4){1.0f, 10.0f, -0.5f, 1.0f});
 
   skybox_init();
   skybox_create(&skybox);
@@ -77,8 +86,10 @@ void game_state_destroy(){
   drawable_free(plane);
 
   texture_delete(&texture);
-  texture_delete(&texture_specular);
   texture_delete(&texture_normal);
+  texture_delete(&texture_brickwall);
+  texture_delete(&texture_brickwall_specular);
+  texture_delete(&texture_brickwall_normal);
   shader_delete(shader);
 
   skybox_delete(&skybox);
@@ -94,7 +105,7 @@ void game_state_update(float deltaTime){
 
 void game_state_draw(){
   texture_bind(texture, 0);
-  texture_bind(texture_specular, 1);
+  texture_bind(texture_brickwall_specular, 1);
   texture_bind(texture_normal, 2);
   shader_bind(shader);
 
@@ -109,8 +120,10 @@ void game_state_draw(){
   shader_uniform_matrix4fv(shader, "model", model[0]);
   drawable_draw(object);
 
-  glm_translate(model, (vec3){0.0f, -1.5f, 0.0f});
-  glm_scale(model, (vec3){5.0f, 0.0f, 5.0f});
+  texture_bind(texture_brickwall, 0);
+  texture_bind(texture_brickwall_normal, 2);
+
+  glm_scale(model, (vec3){10.0f, 0.0f, 10.0f});
   shader_uniform_matrix4fv(shader, "model", model[0]);
   drawable_draw(plane);
 
@@ -118,9 +131,6 @@ void game_state_draw(){
   texture_bind(0, 1);
   texture_bind(0, 2);
 
-  mat4 light_model = GLMS_MAT4_IDENTITY_INIT;
-  glm_translate(light_model, (vec3){1.0f, 10.0f, -0.5f});
-  glm_scale(light_model, (vec3){0.1f, 0.1f, 0.1f});
   shader_uniform_matrix4fv(shader, "model", light_model[0]);
   drawable_draw(light);
 

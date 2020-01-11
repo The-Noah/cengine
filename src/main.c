@@ -40,7 +40,7 @@ void processInput(GLFWwindow *window){
     return;
   }
 
-  const float camera_speed = 5.0f * deltaTime;
+  const float camera_speed = 7.0f * deltaTime;
   if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
     camera_move_forward(camera_speed);
   }
