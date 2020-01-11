@@ -62,15 +62,23 @@ void game_state_init(){
   shader_uniform1i(shader, "material.diffuse_texture", 0);
   shader_uniform1i(shader, "material.specular_texture", 1);
   shader_uniform1i(shader, "material.normal_texture", 2);
-  shader_uniform1f(shader, "material.ambient", 0.2f);
+  shader_uniform1f(shader, "material.ambient", 0.1f);
   shader_uniform1f(shader, "material.diffuse", 1.0f);
-  shader_uniform1f(shader, "material.specular", 0.5f);
+  shader_uniform1f(shader, "material.specular", 1.2f);
   shader_uniform1f(shader, "material.shininess", 64.0f);
 
   glm_translate(light_model, (vec3){1.0f, 10.0f, -0.5f});
   glm_scale(light_model, (vec3){0.1f, 0.1f, 0.1f});
 
-  shader_uniform4fv(shader, "light.position", (vec4){1.0f, 10.0f, -0.5f, 1.0f});
+  shader_uniform3fv(shader, "dirLight.position", (vec3){1.0f, -10.0f, -0.5f});
+  shader_uniform3fv(shader, "pointLights[0].position", (vec3){-1.0f, 2.0f, -1.0f});
+  shader_uniform3fv(shader, "pointLights[1].position", (vec3){ 1.0f, 2.0f, -1.0f});
+  shader_uniform3fv(shader, "pointLights[2].position", (vec3){-1.0f, 2.0f,  1.0f});
+  shader_uniform3fv(shader, "pointLights[3].position", (vec3){ 1.0f, 2.0f,  1.0f});
+  shader_uniform3fv(shader, "pointLights[0].color", (vec3){1.0f, 0.0f, 0.0f});
+  shader_uniform3fv(shader, "pointLights[1].color", (vec3){0.0f, 1.0f, 0.0f});
+  shader_uniform3fv(shader, "pointLights[2].color", (vec3){0.0f, 0.0f, 1.0f});
+  shader_uniform3fv(shader, "pointLights[3].color", (vec3){1.0f, 1.0f, 0.0f});
 
   skybox_init();
   skybox_create(&skybox);
