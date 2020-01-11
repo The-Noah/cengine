@@ -53,5 +53,8 @@
 "    specular *= attenuation;\n"
 "  }\n"
 
-"  FragColor = vec4(ambient + diffuse + specular, 1.0);\n"
+  /* calculate fog */
+"  float f = clamp(gl_FragCoord.z / gl_FragCoord.w / 150.0, 0.0, 1.0);\n"
+
+"  FragColor = mix(vec4(ambient + diffuse + specular, 1.0), vec4(0.2, 0.2, 0.25, 1.0), f);\n"
 "}"
