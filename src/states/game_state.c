@@ -11,6 +11,7 @@
 
 #include "../renderer/shader.h"
 #include "../renderer/texture.h"
+#include "../renderer/drawable.h"
 #include "../camera.h"
 #include "../main.h"
 #include "../textures.h"
@@ -28,34 +29,16 @@ const char* cube_fragment_shader_source = ""
   #include "../shaders/standard.fs"
 ;
 
-unsigned int VAO, VBO, shader, texture, texture_specular, texture_normal, projection_location, viewLoc, cameraPosition_location;
+unsigned int shader, texture, texture_specular, texture_normal, projection_location, viewLoc, cameraPosition_location;
 Skybox skybox;
+drawable *plane;
 
 void game_state_init(){
   printf("game state init\n");
 
   textures_init();
 
-  glGenVertexArrays(1, &VAO);
-  glGenBuffers(1, &VBO);
-
-  glBindVertexArray(VAO);
-
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8 * models[MODEL_NUMBER].vertex_count, models[MODEL_NUMBER].vertices, GL_STATIC_DRAW);
-
-  // position
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-  glEnableVertexAttribArray(0);
-  // tex coord
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-  glEnableVertexAttribArray(1);
-  // normal
-  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
-  glEnableVertexAttribArray(2);
-
-  glBindVertexArray(0);
-  glDeleteBuffers(1, &VBO);
+  plane = drawable_create(&models[PLANE]);
 
   shader = shader_create(cube_vertex_shader_source, cube_fragment_shader_source);
   shader_bind(shader);
@@ -89,12 +72,12 @@ void game_state_init(){
 void game_state_destroy(){
   printf("game state destroy\n");
 
+  drawable_free(plane);
+
   texture_delete(&texture);
   texture_delete(&texture_specular);
   texture_delete(&texture_normal);
   shader_delete(shader);
-
-  glDeleteVertexArrays(1, &VAO);
 
   skybox_delete(&skybox);
   skybox_free();
@@ -123,8 +106,7 @@ void game_state_draw(){
   glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view[0]);
   glUniform3fv(cameraPosition_location, 1, camera_position);
 
-  glBindVertexArray(VAO);
-  glDrawArrays(GL_TRIANGLES, 0, models[MODEL_NUMBER].vertex_count);
+  drawable_draw(plane);
 
   skybox_projection(projection[0]);
   skybox_draw(&skybox);
