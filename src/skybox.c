@@ -4,6 +4,7 @@
 
 #define GLEW_STATIC
 #include <GL/glew.h>
+#include <glfw/glfw3.h>
 
 #include "renderer/shader.h"
 #include "camera.h"
@@ -11,6 +12,9 @@
 unsigned int skybox_shader, skybox_projection_location, skybox_view_location;
 
 #define SKYBOX_SIZE 50
+
+#define DAY_COLOR (vec3){0.3f, 0.6f, 0.8f}
+#define SUNSET_COLOR (vec3){0.8f, 0.4f, 0.1f}
 
 const char skybox_vertices[] = {
    SKYBOX_SIZE,  SKYBOX_SIZE,  SKYBOX_SIZE,
@@ -101,6 +105,10 @@ void skybox_delete(Skybox *skybox){
 void skybox_draw(Skybox *skybox){
   shader_bind(skybox_shader);
   shader_uniform_matrix4fv_at(skybox_view_location, view[0]);
+
+  vec3 color = GLMS_VEC3_ZERO_INIT;
+  glm_vec3_lerp(SUNSET_COLOR, DAY_COLOR, sin(glfwGetTime() / 6.0f) / 2.0f + 0.5f, color);
+  shader_uniform3fv(skybox_shader, "color", color);
 
   glBindVertexArray(skybox->vao);
   glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, 0);
