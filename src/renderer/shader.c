@@ -84,6 +84,10 @@ unsigned int shader_uniform_position(unsigned int shader, const char* name){
 
 // uniform setters
 
+void shader_uniform1i(unsigned int shader, const char* name, int value){
+  glUniform1i(shader_uniform_position(shader, name), value);
+}
+
 void shader_uniform1f(unsigned int shader, const char* name, float value){
   glUniform1f(shader_uniform_position(shader, name), value);
 }

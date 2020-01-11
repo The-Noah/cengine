@@ -2,13 +2,15 @@
 #define TEXTURES_H
 
 typedef enum{
-  GRASS = 0
+  GRASS = 0,
+  BOX,
+  BOX_SPECULAR
 } texture_id;
 
 struct texture{
   unsigned int width;
   unsigned int height;
-  unsigned char	pixel_data[128 * 128 * 4 + 1];
-} textures[1];
+  unsigned char	*pixel_data;
+} textures[3];
 
 #endif
