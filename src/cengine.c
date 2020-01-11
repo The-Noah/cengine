@@ -4,6 +4,10 @@
 
 #include "main.h"
 
+void error_callback(int error, const char* description){
+  fprintf(stderr, "glfw error: %s\n", description);
+}
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
   glViewport(0, 0, width, height);
   cengine.width = width;
@@ -31,6 +35,8 @@ int cengine_init(CEngine *cengine, struct CEngineOptions *options){
 
   cengine->width = options->width;
   cengine->height = options->height;
+
+  glfwSetErrorCallback(error_callback);
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);

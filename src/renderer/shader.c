@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #define GLEW_STATIC
-#include <GL\glew.h>
+#include <GL/glew.h>
 
 unsigned int shader_create(const char* vertex_source, const char* fragment_source){
   int success;

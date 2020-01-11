@@ -1,7 +1,7 @@
 #include "texture.h"
 
 #define GLEW_STATIC
-#include <GL\glew.h>
+#include <GL/glew.h>
 
 unsigned int texture_create(texture_id texture_index){
   unsigned int texture;

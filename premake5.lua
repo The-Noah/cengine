@@ -8,9 +8,6 @@ project "cengine"
   files {"src/**.h", "src/**.c"}
 
   includedirs "include/"
-  libdirs "lib/"
-
-  links {"glew32s", "glfw3", "gdi32"}
 
   filter "configurations:Debug"
     defines {"DEBUG"}
@@ -23,7 +20,8 @@ project "cengine"
     kind "WindowedApp"
 
   filter {"system:windows"}
-		links {"opengl32"}
+    libdirs "lib/"
+    links {"glew32s", "glfw3", "gdi32", "opengl32"}
 		
-	filter {"system:not windows"}
-		links {"GL"}
+  filter {"system:not windows"}
+    links {"GLEW", "glfw", "rt", "m", "dl", "GL"}

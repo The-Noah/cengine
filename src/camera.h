@@ -2,8 +2,8 @@
 #define CAMERA_H
 
 #define CGLM_ALL_UNALIGNED
-#include <cglm\cglm.h>
-#include <cglm\struct.h>
+#include <cglm/cglm.h>
+#include <cglm/struct.h>
 
 vec3 camera_position;
 mat4 view;

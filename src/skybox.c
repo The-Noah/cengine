@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #define GLEW_STATIC
-#include <GL\glew.h>
+#include <GL/glew.h>
 
 #include "renderer/shader.h"
 #include "camera.h"

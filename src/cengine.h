@@ -2,11 +2,11 @@
 #define CENEGINE_H
 
 #define GLEW_STATIC
-#include <GL\glew.h>
-#include <GLFW\glfw3.h>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #define CGLM_ALL_UNALIGNED
-#include <cglm\cglm.h>
-#include <cglm\struct.h>
+#include <cglm/cglm.h>
+#include <cglm/struct.h>
 
 #include "state_manager.h"
 
