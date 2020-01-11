@@ -8,7 +8,7 @@ typedef enum{
 struct texture{
   unsigned int width;
   unsigned int height;
-  unsigned char	pixel_data[128 * 128 * 4 + 1];
+  unsigned char	pixel_data[16 * 16 * 4 + 1];
 } textures[1];
 
 #endif

@@ -2,7 +2,6 @@
 
 "out vec4 FragColor;\n"
 
-"in float vBrightness;\n"
 "in vec2 vTexCoord;\n"
 "in vec3 vPosition;\n"
 "in vec3 vNormal;\n"
@@ -19,6 +18,7 @@
 "uniform sampler2D texture1;\n"
 
 "void main(){\n"
+// "  FragColor = vec4(1.0);\n"
 "  vec3 normal = normalize(vNormal);\n"
 "  vec3 lightDir = normalize(vec3(0.5, 5.0, -0.2) - vPosition);\n"
   /* diffuse */
@@ -29,5 +29,5 @@
 "  float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);\n"
 "  vec3 specular = material.specular * spec * vec3(1.0);\n"
 
-"  FragColor = texture(texture1, vTexCoord) * vec4((vec3(material.ambient) + diffuse + specular) * vec3(vBrightness), 1.0);\n"
+"  FragColor = texture(texture1, vTexCoord) * vec4((vec3(material.ambient) + diffuse + specular), 1.0);\n"
 "}"

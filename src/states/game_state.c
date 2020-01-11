@@ -16,48 +16,7 @@
 #include "../textures.h"
 #include "../skybox.h"
 #include "../cengine.h"
-
-const float cube_vertices[] = {
-  // front
-   0.5f,  0.5f,  0.5f, 1.1f,  0.0f,  0.0f,  1.0f,
-  -0.5f,  0.5f,  0.5f, 1.1f,  0.0f,  0.0f,  1.0f,
-  -0.5f, -0.5f,  0.5f, 1.1f,  0.0f,  0.0f,  1.0f,
-   0.5f, -0.5f,  0.5f, 1.1f,  0.0f,  0.0f,  1.0f,
-  // back
-  -0.5f,  0.5f, -0.5f, 1.1f,  0.0f,  0.0f, -1.0f,
-   0.5f,  0.5f, -0.5f, 1.1f,  0.0f,  0.0f, -1.0f,
-   0.5f, -0.5f, -0.5f, 1.1f,  0.0f,  0.0f, -1.0f,
-  -0.5f, -0.5f, -0.5f, 1.1f,  0.0f,  0.0f, -1.0f,
-  // left
-  -0.5f,  0.5f,  0.5f, 1.0f, -1.0f,  0.0f,  0.0f,
-  -0.5f,  0.5f, -0.5f, 1.0f, -1.0f,  0.0f,  0.0f,
-  -0.5f, -0.5f, -0.5f, 1.0f, -1.0f,  0.0f,  0.0f,
-  -0.5f, -0.5f,  0.5f, 1.0f, -1.0f,  0.0f,  0.0f,
-  // right
-   0.5f,  0.5f, -0.5f, 1.0f,  1.0f,  0.0f,  0.0f,
-   0.5f,  0.5f,  0.5f, 1.0f,  1.0f,  0.0f,  0.0f,
-   0.5f, -0.5f,  0.5f, 1.0f,  1.0f,  0.0f,  0.0f,
-   0.5f, -0.5f, -0.5f, 1.0f,  1.0f,  0.0f,  0.0f,
-  // top
-   0.5f,  0.5f, -0.5f, 1.2f,  0.0f,  1.0f,  0.0f,
-  -0.5f,  0.5f, -0.5f, 1.2f,  0.0f,  1.0f,  0.0f,
-  -0.5f,  0.5f,  0.5f, 1.2f,  0.0f,  1.0f,  0.0f,
-   0.5f,  0.5f,  0.5f, 1.2f,  0.0f,  1.0f,  0.0f,
-  // bottom
-  -0.5f, -0.5f, -0.5f, 1.2f,  0.0f, -1.0f,  0.0f,
-   0.5f, -0.5f, -0.5f, 1.2f,  0.0f, -1.0f,  0.0f,
-   0.5f, -0.5f,  0.5f, 1.2f,  0.0f, -1.0f,  0.0f,
-  -0.5f, -0.5f,  0.5f, 1.2f,  0.0f, -1.0f,  0.0f
-};
-
-const unsigned char cube_indices[] = {
-  0, 1, 2, 2, 3, 0,
-  4, 5, 6, 6, 7, 4,
-  8, 9, 10, 10, 11, 8,
-  12, 13, 14, 14, 15, 12,
-  16, 17, 18, 18, 19, 16,
-  20, 21, 22, 22, 23, 20
-};
+#include "../models.h"
 
 const char* cube_vertex_shader_source = ""
   #include "../shaders/standard.vs"
@@ -67,39 +26,32 @@ const char* cube_fragment_shader_source = ""
   #include "../shaders/standard.fs"
 ;
 
-unsigned int VAO, VBO, EBO, shader, texture, projection_location, viewLoc, cameraPosition_location;
+unsigned int VAO, VBO, shader, texture, projection_location, viewLoc, cameraPosition_location;
 Skybox skybox;
 
 void game_state_init(){
   printf("game state init\n");
 
-  glfwSetInputMode(cengine.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
-  glGenBuffers(1, &EBO);
 
   glBindVertexArray(VAO);
 
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertices), cube_vertices, GL_STATIC_DRAW);
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_indices), cube_indices, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8 * models[0].vertex_count, models[0].vertices, GL_STATIC_DRAW);
 
   // position
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
-  // brightness
-  glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
+  // tex coord
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
   // normal
-  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(4 * sizeof(float)));
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
   glEnableVertexAttribArray(2);
 
   glBindVertexArray(0);
   glDeleteBuffers(1, &VBO);
-  glDeleteBuffers(1, &EBO);
 
   shader = shader_create(cube_vertex_shader_source, cube_fragment_shader_source);
   shader_bind(shader);
@@ -122,6 +74,8 @@ void game_state_init(){
 
   skybox_init();
   skybox_create(&skybox);
+
+  glfwSetInputMode(cengine.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 void game_state_destroy(){
@@ -131,8 +85,6 @@ void game_state_destroy(){
   shader_delete(shader);
 
   glDeleteVertexArrays(1, &VAO);
-  glDeleteBuffers(1, &VBO);
-  glDeleteBuffers(1, &EBO);
 
   skybox_delete(&skybox);
   skybox_free();
@@ -155,7 +107,7 @@ void game_state_draw(){
   glUniform3fv(cameraPosition_location, 1, camera_position);
 
   glBindVertexArray(VAO);
-  glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, 0);
+  glDrawArrays(GL_TRIANGLES, 0, models[0].vertex_count);
 
   skybox_projection(projection[0]);
   skybox_draw(&skybox);
