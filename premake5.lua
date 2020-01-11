@@ -5,9 +5,11 @@ project "cengine"
   language "C"
   targetdir "bin/%{cfg.buildcfg}" 
 
-  files {"src/**.h", "src/**.c"}
+  files {"src/**.h", "src/**.c", "res/textures/**.c"}
 
   includedirs "include/"
+
+  disablewarnings {"trigraphs"}
 
   filter "configurations:Debug"
     defines {"DEBUG"}

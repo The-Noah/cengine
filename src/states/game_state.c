@@ -18,7 +18,7 @@
 #include "../cengine.h"
 #include "../models.h"
 
-#define MODEL_NUMBER 0
+#define MODEL_NUMBER CUBE
 
 const char* cube_vertex_shader_source = ""
   #include "../shaders/standard.vs"
@@ -28,11 +28,13 @@ const char* cube_fragment_shader_source = ""
   #include "../shaders/standard.fs"
 ;
 
-unsigned int VAO, VBO, shader, texture, texture_specular, projection_location, viewLoc, cameraPosition_location;
+unsigned int VAO, VBO, shader, texture, texture_specular, texture_normal, projection_location, viewLoc, cameraPosition_location;
 Skybox skybox;
 
 void game_state_init(){
   printf("game state init\n");
+
+  textures_init();
 
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
@@ -58,10 +60,9 @@ void game_state_init(){
   shader = shader_create(cube_vertex_shader_source, cube_fragment_shader_source);
   shader_bind(shader);
 
-  glActiveTexture(GL_TEXTURE0);
-  texture = texture_create(BOX);
-  glActiveTexture(GL_TEXTURE1);
-  texture_specular = texture_create(BOX_SPECULAR);
+  texture = texture_create(BRICKWALL);
+  texture_specular = texture_create(BRICKWALL_SPECULAR);
+  texture_normal = texture_create(BRICKWALL_NORMAL);
 
   mat4 model = GLMS_MAT4_IDENTITY_INIT;
   glm_translate(model, (vec3){0.0f, 0.0f, 0.0f});
@@ -73,6 +74,7 @@ void game_state_init(){
   cameraPosition_location = shader_uniform_position(shader, "cameraPosition");
   shader_uniform1i(shader, "material.diffuse_texture", 0);
   shader_uniform1i(shader, "material.specular_texture", 1);
+  shader_uniform1i(shader, "material.normal_texture", 2);
   shader_uniform1f(shader, "material.ambient", 0.1f);
   shader_uniform1f(shader, "material.diffuse", 1.1f);
   shader_uniform1f(shader, "material.specular", 2.0f);
@@ -89,12 +91,15 @@ void game_state_destroy(){
 
   texture_delete(&texture);
   texture_delete(&texture_specular);
+  texture_delete(&texture_normal);
   shader_delete(shader);
 
   glDeleteVertexArrays(1, &VAO);
 
   skybox_delete(&skybox);
   skybox_free();
+
+  textures_free();
 
   glfwSetInputMode(cengine.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
@@ -107,6 +112,8 @@ void game_state_draw(){
   texture_bind(texture);
   glActiveTexture(GL_TEXTURE1);
   texture_bind(texture_specular);
+  glActiveTexture(GL_TEXTURE2);
+  texture_bind(texture_normal);
   shader_bind(shader);
 
   mat4 projection = GLMS_MAT4_IDENTITY_INIT;

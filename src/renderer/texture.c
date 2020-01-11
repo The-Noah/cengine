@@ -8,9 +8,11 @@ unsigned int texture_create(texture_id texture_index){
   glGenTextures(1, &texture);
   texture_bind(texture);
 
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB_ALPHA, textures[texture_index].width, textures[texture_index].height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textures[texture_index].pixel_data);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  struct texture *texture_data = textures_get(texture_index);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB, texture_data->width, texture_data->height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture_data->pixel_data);
+  glGenerateMipmap(GL_TEXTURE_2D);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
   return texture;
 }

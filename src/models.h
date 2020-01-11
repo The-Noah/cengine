@@ -5,6 +5,13 @@
 #include <cglm\cglm.h>
 #include <cglm\struct.h>
 
+typedef enum{
+  CUBE = 0,
+  SHERE,
+  MONKEY,
+  SPAWN_BEACON
+} model_id;
+
 struct model{
   float *vertices;
   unsigned int vertex_count;
