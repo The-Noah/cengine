@@ -7,6 +7,7 @@
 
 typedef enum{
   CUBE = 0,
+  PLANE,
   SHERE,
   MONKEY,
   SPAWN_BEACON
@@ -15,6 +16,6 @@ typedef enum{
 struct model{
   float *vertices;
   unsigned int vertex_count;
-} models[4];
+} models[5];
 
 #endif

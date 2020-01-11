@@ -18,7 +18,7 @@
 #include "../cengine.h"
 #include "../models.h"
 
-#define MODEL_NUMBER CUBE
+#define MODEL_NUMBER PLANE
 
 const char* cube_vertex_shader_source = ""
   #include "../shaders/standard.vs"
