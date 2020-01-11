@@ -71,10 +71,10 @@ void game_state_init(){
   glm_scale(light_model, (vec3){0.1f, 0.1f, 0.1f});
 
   shader_uniform3fv(shader, "dirLight.position", (vec3){1.0f, -10.0f, -0.5f});
-  shader_uniform3fv(shader, "pointLights[0].position", (vec3){-1.0f, 2.0f, -1.0f});
-  shader_uniform3fv(shader, "pointLights[1].position", (vec3){ 1.0f, 2.0f, -1.0f});
-  shader_uniform3fv(shader, "pointLights[2].position", (vec3){-1.0f, 2.0f,  1.0f});
-  shader_uniform3fv(shader, "pointLights[3].position", (vec3){ 1.0f, 2.0f,  1.0f});
+  shader_uniform3fv(shader, "pointLights[0].position", (vec3){-4.0f, -2.0f, -4.0f});
+  shader_uniform3fv(shader, "pointLights[1].position", (vec3){ 4.0f, -2.0f, -4.0f});
+  shader_uniform3fv(shader, "pointLights[2].position", (vec3){-4.0f, -2.0f,  4.0f});
+  shader_uniform3fv(shader, "pointLights[3].position", (vec3){ 4.0f, -2.0f,  4.0f});
   shader_uniform3fv(shader, "pointLights[0].color", (vec3){1.0f, 0.0f, 0.0f});
   shader_uniform3fv(shader, "pointLights[1].color", (vec3){0.0f, 1.0f, 0.0f});
   shader_uniform3fv(shader, "pointLights[2].color", (vec3){0.0f, 0.0f, 1.0f});
