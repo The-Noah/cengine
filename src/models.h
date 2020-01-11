@@ -8,6 +8,6 @@
 struct model{
   float *vertices;
   unsigned int vertex_count;
-} models[3];
+} models[4];
 
 #endif

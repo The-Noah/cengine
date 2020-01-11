@@ -18,6 +18,8 @@
 #include "../cengine.h"
 #include "../models.h"
 
+#define MODEL_NUMBER 0
+
 const char* cube_vertex_shader_source = ""
   #include "../shaders/standard.vs"
 ;
@@ -26,7 +28,7 @@ const char* cube_fragment_shader_source = ""
   #include "../shaders/standard.fs"
 ;
 
-unsigned int VAO, VBO, shader, texture, projection_location, viewLoc, cameraPosition_location;
+unsigned int VAO, VBO, shader, texture, texture_specular, projection_location, viewLoc, cameraPosition_location;
 Skybox skybox;
 
 void game_state_init(){
@@ -38,7 +40,7 @@ void game_state_init(){
   glBindVertexArray(VAO);
 
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8 * models[0].vertex_count, models[0].vertices, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8 * models[MODEL_NUMBER].vertex_count, models[MODEL_NUMBER].vertices, GL_STATIC_DRAW);
 
   // position
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -57,7 +59,9 @@ void game_state_init(){
   shader_bind(shader);
 
   glActiveTexture(GL_TEXTURE0);
-  texture = texture_create(GRASS);
+  texture = texture_create(BOX);
+  glActiveTexture(GL_TEXTURE1);
+  texture_specular = texture_create(BOX_SPECULAR);
 
   mat4 model = GLMS_MAT4_IDENTITY_INIT;
   glm_translate(model, (vec3){0.0f, 0.0f, 0.0f});
@@ -67,10 +71,12 @@ void game_state_init(){
 
   viewLoc = shader_uniform_position(shader, "view");
   cameraPosition_location = shader_uniform_position(shader, "cameraPosition");
+  shader_uniform1i(shader, "material.diffuse_texture", 0);
+  shader_uniform1i(shader, "material.specular_texture", 1);
   shader_uniform1f(shader, "material.ambient", 0.1f);
-  shader_uniform1f(shader, "material.diffuse", 1.0f);
-  shader_uniform1f(shader, "material.specular", 0.5f);
-  shader_uniform1f(shader, "material.shininess", 16.0f);
+  shader_uniform1f(shader, "material.diffuse", 1.1f);
+  shader_uniform1f(shader, "material.specular", 2.0f);
+  shader_uniform1f(shader, "material.shininess", 128.0f);
 
   skybox_init();
   skybox_create(&skybox);
@@ -82,6 +88,7 @@ void game_state_destroy(){
   printf("game state destroy\n");
 
   texture_delete(&texture);
+  texture_delete(&texture_specular);
   shader_delete(shader);
 
   glDeleteVertexArrays(1, &VAO);
@@ -96,7 +103,10 @@ void game_state_update(float deltaTime){
 }
 
 void game_state_draw(){
+  glActiveTexture(GL_TEXTURE0);
   texture_bind(texture);
+  glActiveTexture(GL_TEXTURE1);
+  texture_bind(texture_specular);
   shader_bind(shader);
 
   mat4 projection = GLMS_MAT4_IDENTITY_INIT;
@@ -107,7 +117,7 @@ void game_state_draw(){
   glUniform3fv(cameraPosition_location, 1, camera_position);
 
   glBindVertexArray(VAO);
-  glDrawArrays(GL_TRIANGLES, 0, models[0].vertex_count);
+  glDrawArrays(GL_TRIANGLES, 0, models[MODEL_NUMBER].vertex_count);
 
   skybox_projection(projection[0]);
   skybox_draw(&skybox);
