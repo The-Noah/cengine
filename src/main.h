@@ -4,6 +4,5 @@
 #include "cengine.h"
 
 CEngine cengine;
-unsigned char use_normal_map;
 
 #endif

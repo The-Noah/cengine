@@ -11,6 +11,14 @@ typedef struct{
   unsigned short vertex_count;
 } drawable;
 
+typedef struct{
+  float position[3];
+  float uv[2];
+  float normal[3];
+  float tangent[3];
+  float bitangent[3];
+} vertex;
+
 drawable *drawable_create(struct model *model);
 void drawable_free(drawable *drawable);
 void drawable_draw(drawable *drawable);

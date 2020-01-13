@@ -15,8 +15,6 @@ double deltaTime = 0.0;
 char firstMouse = 1;
 float lastX = 400.0f, lastY = 300.0f;
 
-unsigned char use_normal_map = 1;
-
 CEngine cengine;
 State game_state;
 
@@ -29,13 +27,6 @@ void processInput(GLFWwindow *window){
   }else if(escPress == 1 && glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_RELEASE){
     char s = state_manager_pop(&cengine.state_manager);
     escPress = 0;
-  }
-  if(glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS){
-    f1Press = 1;
-  }else if(f1Press == 1 && glfwGetKey(window, GLFW_KEY_F1) == GLFW_RELEASE){
-    use_normal_map = !use_normal_map;
-    f1Press = 0;
-    printf("%d\n", use_normal_map);
   }
   if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS){
     mousePress = 1;

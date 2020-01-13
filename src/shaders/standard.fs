@@ -6,7 +6,7 @@
 "in vec2 vTexCoord;\n"
 "in vec3 vPosition;\n"
 "in vec3 vNormal;\n"
-// "in mat3 vTBN;\n"
+"in mat3 vTBN;\n"
 
 "struct Material{\n"
 "  sampler2D diffuse_texture;\n"
@@ -69,9 +69,9 @@
 
 "void main(){\n"
 "  vec3 normal = normalize(texture(material.normal_texture, vTexCoord).rgb);\n"
-"  normal = normalize(normal * 2.0 - 1.0);"
-// "  normal = normalize(vTBN * normal);\n"
-// "  vec3 normal = normalize(vNormal);\n"
+"  normal = normalize(normal * 2.0 - 1.0);\n"
+"  normal = normalize(vTBN * normal);\n"
+
 "  vec3 viewDir = normalize(cameraPosition - vPosition);\n"
 
 "  vec3 result = CalcDirLight(dirLight, normal, viewDir);\n"
@@ -82,5 +82,6 @@
   /* calculate fog */
 "  float f = clamp(length(cameraPosition - vPosition) / 150.0 - 0.1, 0.0, 1.0);\n"
 
+// "  FragColor = vec4(normal, 1.0);\n"
 "  FragColor = mix(vec4(result, 1.0), vec4(0.2, 0.2, 0.25, 1.0), f);\n"
 "}"

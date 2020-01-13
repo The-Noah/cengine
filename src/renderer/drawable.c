@@ -14,6 +14,8 @@ drawable *drawable_create(struct model *model){
   drawable *drawable = malloc(sizeof(drawable));
   drawable->vertex_count = model->vertex_count;
 
+  // vertex *vertices = (vertex[]){{-1.0f,1.0f,1.0f},{0.0f,1.0f},{-1.0f,0.0f,0.0f},{1.0f,0.0f,0.0f},{-0.0f,-1.0f,0.0f},{-1.0f,-1.0f,-1.0f},{1.0f,0.0f},{-1.0f,0.0f,0.0f},{1.0f,0.0f,0.0f},{-0.0f,-1.0f,0.0f},{-1.0f,-1.0f,1.0f},{1.0f,1.0f},{-1.0f,0.0f,0.0f},{1.0f,0.0f,0.0f},{-0.0f,-1.0f,0.0f},{-1.0f,1.0f,-1.0f},{1.0f,0.0f},{0.0f,0.0f,-1.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f},{1.0f,-1.0f,-1.0f},{0.0f,1.0f},{0.0f,0.0f,-1.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f},{-1.0f,-1.0f,-1.0f},{0.0f,0.0f},{0.0f,0.0f,-1.0f},{1.0f,0.0f,0.0f},{-0.0f,-1.0f,0.0f},{1.0f,1.0f,-1.0f},{1.0f,0.0f},{1.0f,0.0f,0.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f},{1.0f,-1.0f,1.0f},{0.0f,1.0f},{1.0f,0.0f,0.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f},{1.0f,-1.0f,-1.0f},{0.0f,0.0f},{1.0f,0.0f,0.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f},{1.0f,1.0f,1.0f},{1.0f,0.0f},{0.0f,0.0f,1.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f},{-1.0f,-1.0f,1.0f},{0.0f,1.0f},{0.0f,0.0f,1.0f},{1.0f,0.0f,0.0f},{-0.0f,-1.0f,0.0f},{1.0f,-1.0f,1.0f},{0.0f,0.0f},{0.0f,0.0f,1.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f},{1.0f,-1.0f,-1.0f},{1.0f,0.0f},{0.0f,-1.0f,0.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f},{-1.0f,-1.0f,1.0f},{0.0f,1.0f},{0.0f,-1.0f,0.0f},{1.0f,0.0f,0.0f},{-0.0f,-1.0f,0.0f},{-1.0f,-1.0f,-1.0f},{0.0f,0.0f},{0.0f,-1.0f,0.0f},{1.0f,0.0f,0.0f},{-0.0f,-1.0f,0.0f},{-1.0f,1.0f,-1.0f},{1.0f,0.0f},{0.0f,1.0f,0.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f},{1.0f,1.0f,1.0f},{0.0f,1.0f},{0.0f,1.0f,0.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f},{1.0f,1.0f,-1.0f},{0.0f,0.0f},{0.0f,1.0f,0.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f},{-1.0f,1.0f,1.0f},{0.0f,1.0f},{-1.0f,0.0f,0.0f},{1.0f,0.0f,0.0f},{-0.0f,-1.0f,0.0f},{-1.0f,1.0f,-1.0f},{0.0f,0.0f},{-1.0f,0.0f,0.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f},{-1.0f,-1.0f,-1.0f},{1.0f,0.0f},{-1.0f,0.0f,0.0f},{1.0f,0.0f,0.0f},{-0.0f,-1.0f,0.0f},{-1.0f,1.0f,-1.0f},{1.0f,0.0f},{0.0f,0.0f,-1.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f},{1.0f,1.0f,-1.0f},{1.0f,1.0f},{0.0f,0.0f,-1.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f},{1.0f,-1.0f,-1.0f},{0.0f,1.0f},{0.0f,0.0f,-1.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f},{1.0f,1.0f,-1.0f},{1.0f,0.0f},{1.0f,0.0f,0.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f},{1.0f,1.0f,1.0f},{1.0f,1.0f},{1.0f,0.0f,0.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f},{1.0f,-1.0f,1.0f},{0.0f,1.0f},{1.0f,0.0f,0.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f},{1.0f,1.0f,1.0f},{1.0f,0.0f},{0.0f,0.0f,1.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f},{-1.0f,1.0f,1.0f},{1.0f,1.0f},{0.0f,0.0f,1.0f},{1.0f,0.0f,0.0f},{-0.0f,-1.0f,0.0f},{-1.0f,-1.0f,1.0f},{0.0f,1.0f},{0.0f,0.0f,1.0f},{1.0f,0.0f,0.0f},{-0.0f,-1.0f,0.0f},{1.0f,-1.0f,-1.0f},{1.0f,0.0f},{0.0f,-1.0f,0.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f},{1.0f,-1.0f,1.0f},{1.0f,1.0f},{0.0f,-1.0f,0.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f},{-1.0f,-1.0f,1.0f},{0.0f,1.0f},{0.0f,-1.0f,0.0f},{1.0f,0.0f,0.0f},{-0.0f,-1.0f,0.0f},{-1.0f,1.0f,-1.0f},{1.0f,0.0f},{0.0f,1.0f,0.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f},{-1.0f,1.0f,1.0f},{1.0f,1.0f},{0.0f,1.0f,0.0f},{1.0f,0.0f,0.0f},{-0.0f,-1.0f,0.0f},{1.0f,1.0f,1.0f},{0.0f,1.0f},{0.0f,1.0f,0.0f},{-1.0f,-0.0f,0.0f},{-0.0f,-1.0f,0.0f}};
+
   glGenVertexArrays(1, &drawable->vao);
 
   unsigned int vbo;
@@ -23,6 +25,7 @@ drawable *drawable_create(struct model *model){
 
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof(float) * DRAWABLE_SIZE * model->vertex_count, model->vertices, GL_STATIC_DRAW);
+  // glBufferData(GL_ARRAY_BUFFER, sizeof(vertex) * 36, vertices, GL_STATIC_DRAW);
 
   // position
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, DRAWABLE_SIZE * sizeof(float), (void*)0);
@@ -33,7 +36,7 @@ drawable *drawable_create(struct model *model){
   // normal
   glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, DRAWABLE_SIZE * sizeof(float), (void*)(5 * sizeof(float)));
   glEnableVertexAttribArray(2);
-  // // tangent
+  // tangent
   // glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, DRAWABLE_SIZE * sizeof(float), (void*)(8 * sizeof(float)));
   // glEnableVertexAttribArray(3);
   // // bitangent

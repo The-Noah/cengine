@@ -6,3 +6,6 @@ Makefile
 
 # config
 .vscode
+
+# misc
+*.obj
