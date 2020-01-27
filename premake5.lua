@@ -5,7 +5,7 @@ project "cengine"
   language "C"
   targetdir "bin/%{cfg.buildcfg}" 
 
-  files {"src/**.h", "src/**.c", "res/textures/**.c"}
+  files {"src/**.h", "src/**.c"}
 
   includedirs "include/"
 

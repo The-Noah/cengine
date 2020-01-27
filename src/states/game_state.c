@@ -15,7 +15,6 @@
 #include "../renderer/drawable.h"
 #include "../camera.h"
 #include "../main.h"
-#include "../textures.h"
 #include "../skybox.h"
 #include "../cengine.h"
 #include "../models.h"
@@ -75,8 +74,6 @@ char* read_file(const char* path){
 void game_state_init(){
   printf("game state init\n");
 
-  textures_init();
-
   plane = drawable_create(&models[PLANE]);
   object = drawable_create(&models[SPAWN_BEACON]);
   light = drawable_create(&models[SPHERE]);
@@ -103,11 +100,11 @@ void game_state_init(){
   }
 #endif
 
-  texture = texture_create(SPAWNBEACON);
-  texture_normal = texture_create(SPAWNBEACON_NORMAL);
-  texture_brickwall = texture_create(BRICKWALL);
-  texture_brickwall_specular = texture_create(BRICKWALL_SPECULAR);
-  texture_brickwall_normal = texture_create(BRICKWALL_NORMAL);
+  texture = texture_create("spawnbeacon.png");
+  texture_normal = texture_create("spawnbeacon_normal.png");
+  texture_brickwall = texture_create("brickwall.png");
+  texture_brickwall_specular = texture_create("brickwall_specular.png");
+  texture_brickwall_normal = texture_create("brickwall_normal.png");
 
   projection_location = shader_uniform_position(shader, "projection");
 
@@ -157,8 +154,6 @@ void game_state_destroy(){
 
   skybox_delete(&skybox);
   skybox_free();
-
-  textures_free();
 
   glfwSetInputMode(cengine.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
