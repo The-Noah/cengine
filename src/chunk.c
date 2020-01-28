@@ -12,6 +12,10 @@ void byte4_set(GLbyte x, GLbyte y, GLbyte z, GLbyte w, byte4 dest){
   dest[3] = w;
 }
 
+unsigned short block_index(uint8_t x, uint8_t y, uint8_t z){
+  return x + y * CHUNK_SIZE + z * CHUNK_SIZE_SQUARED;
+}
+
 struct chunk* chunk_init(){
   printf("creating chunk\n");
   struct chunk* chunk = malloc(sizeof(struct chunk));
@@ -28,7 +32,7 @@ struct chunk* chunk_init(){
       int h = (f + 1) / 2 * (CHUNK_SIZE - 1) + 1;
 
       for(uint8_t y = 0; y < CHUNK_SIZE; y++){
-        chunk->blocks[x + y * CHUNK_SIZE + z * CHUNK_SIZE_SQUARED] = y < h ? 1 : 0;
+        chunk->blocks[block_index(x, y, z)] = y < h ? 1 : 0;
         if(y < h){
           count++;
         }
@@ -54,59 +58,71 @@ void chunk_update(struct chunk *chunk){
   for(uint8_t y = 0; y < CHUNK_SIZE; y++){
     for(uint8_t x = 0; x < CHUNK_SIZE; x++){
       for(uint8_t z = 0; z < CHUNK_SIZE; z++){
-        uint8_t block = chunk->blocks[x + y * CHUNK_SIZE + z * CHUNK_SIZE_SQUARED];
+        uint8_t block = chunk->blocks[block_index(x, y, z)];
 
         if(!block){
           continue;
         }
 
         // -x
-        byte4_set(x, y, z, block, vertex[i++]);
-        byte4_set(x, y, z + 1, block, vertex[i++]);
-        byte4_set(x, y + 1, z, block, vertex[i++]);
-        byte4_set(x, y + 1, z, block, vertex[i++]);
-        byte4_set(x, y, z + 1, block, vertex[i++]);
-        byte4_set(x, y + 1, z + 1, block, vertex[i++]);
+        if(chunk_get(chunk, x - 1, y, z) == 0){
+          byte4_set(x, y, z, block, vertex[i++]);
+          byte4_set(x, y, z + 1, block, vertex[i++]);
+          byte4_set(x, y + 1, z, block, vertex[i++]);
+          byte4_set(x, y + 1, z, block, vertex[i++]);
+          byte4_set(x, y, z + 1, block, vertex[i++]);
+          byte4_set(x, y + 1, z + 1, block, vertex[i++]);
+        }
 
         // +x
-        byte4_set(x + 1, y + 1, z, block, vertex[i++]);
-        byte4_set(x + 1, y, z + 1, block, vertex[i++]);
-        byte4_set(x + 1, y, z, block, vertex[i++]);
-        byte4_set(x + 1, y + 1, z + 1, block, vertex[i++]);
-        byte4_set(x + 1, y, z + 1, block, vertex[i++]);
-        byte4_set(x + 1, y + 1, z, block, vertex[i++]);
+        if(chunk_get(chunk, x + 1, y, z) == 0){
+          byte4_set(x + 1, y + 1, z, block, vertex[i++]);
+          byte4_set(x + 1, y, z + 1, block, vertex[i++]);
+          byte4_set(x + 1, y, z, block, vertex[i++]);
+          byte4_set(x + 1, y + 1, z + 1, block, vertex[i++]);
+          byte4_set(x + 1, y, z + 1, block, vertex[i++]);
+          byte4_set(x + 1, y + 1, z, block, vertex[i++]);
+        }
 
         // -z
-        byte4_set(x, y + 1, z, block, vertex[i++]);
-        byte4_set(x + 1, y, z, block, vertex[i++]);
-        byte4_set(x, y, z, block, vertex[i++]);
-        byte4_set(x + 1, y + 1, z, block, vertex[i++]);
-        byte4_set(x + 1, y, z, block, vertex[i++]);
-        byte4_set(x, y + 1, z, block, vertex[i++]);
+        if(chunk_get(chunk, x, y, z - 1) == 0){
+          byte4_set(x, y + 1, z, block, vertex[i++]);
+          byte4_set(x + 1, y, z, block, vertex[i++]);
+          byte4_set(x, y, z, block, vertex[i++]);
+          byte4_set(x + 1, y + 1, z, block, vertex[i++]);
+          byte4_set(x + 1, y, z, block, vertex[i++]);
+          byte4_set(x, y + 1, z, block, vertex[i++]);
+        }
 
         // +z
-        byte4_set(x, y, z + 1, block, vertex[i++]);
-        byte4_set(x + 1, y, z + 1, block, vertex[i++]);
-        byte4_set(x, y + 1, z + 1, block, vertex[i++]);
-        byte4_set(x, y + 1, z + 1, block, vertex[i++]);
-        byte4_set(x + 1, y, z + 1, block, vertex[i++]);
-        byte4_set(x + 1, y + 1, z + 1, block, vertex[i++]);
+        if(chunk_get(chunk, x, y, z + 1) == 0){
+          byte4_set(x, y, z + 1, block, vertex[i++]);
+          byte4_set(x + 1, y, z + 1, block, vertex[i++]);
+          byte4_set(x, y + 1, z + 1, block, vertex[i++]);
+          byte4_set(x, y + 1, z + 1, block, vertex[i++]);
+          byte4_set(x + 1, y, z + 1, block, vertex[i++]);
+          byte4_set(x + 1, y + 1, z + 1, block, vertex[i++]);
+        }
 
         // -y
-        byte4_set(x + 1, y, z, block, vertex[i++]);
-        byte4_set(x, y, z + 1, block, vertex[i++]);
-        byte4_set(x, y, z, block, vertex[i++]);
-        byte4_set(x + 1, y, z + 1, block, vertex[i++]);
-        byte4_set(x, y, z + 1, block, vertex[i++]);
-        byte4_set(x + 1, y, z, block, vertex[i++]);
+        if(chunk_get(chunk, x, y - 1, z) == 0){
+          byte4_set(x + 1, y, z, block, vertex[i++]);
+          byte4_set(x, y, z + 1, block, vertex[i++]);
+          byte4_set(x, y, z, block, vertex[i++]);
+          byte4_set(x + 1, y, z + 1, block, vertex[i++]);
+          byte4_set(x, y, z + 1, block, vertex[i++]);
+          byte4_set(x + 1, y, z, block, vertex[i++]);
+        }
 
         // +y
-        byte4_set(x, y + 1, z, block, vertex[i++]);
-        byte4_set(x, y + 1, z + 1, block, vertex[i++]);
-        byte4_set(x + 1, y + 1, z, block, vertex[i++]);
-        byte4_set(x + 1, y + 1, z, block, vertex[i++]);
-        byte4_set(x, y + 1, z + 1, block, vertex[i++]);
-        byte4_set(x + 1, y + 1, z + 1, block, vertex[i++]);
+        if(chunk_get(chunk, x, y + 1, z) == 0){
+          byte4_set(x, y + 1, z, block, vertex[i++]);
+          byte4_set(x, y + 1, z + 1, block, vertex[i++]);
+          byte4_set(x + 1, y + 1, z, block, vertex[i++]);
+          byte4_set(x + 1, y + 1, z, block, vertex[i++]);
+          byte4_set(x, y + 1, z + 1, block, vertex[i++]);
+          byte4_set(x + 1, y + 1, z + 1, block, vertex[i++]);
+        }
       }
     }
   }
@@ -132,4 +148,19 @@ void chunk_draw(struct chunk *chunk){
   glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo);
   glVertexAttribPointer(0, 4, GL_BYTE, GL_FALSE, 0, 0);
   glDrawArrays(GL_TRIANGLES, 0, chunk->elements);
+}
+
+uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
+  if(x < 0 || x >= CHUNK_SIZE ||
+     y < 0 || y >= CHUNK_SIZE ||
+     z < 0 || z >= CHUNK_SIZE){
+    return 0;
+  }
+
+  return chunk->blocks[x + y * CHUNK_SIZE + z * CHUNK_SIZE_SQUARED];
+}
+
+void set(struct chunk *chunk, int x, int y, int z, uint8_t block){
+  chunk->blocks[x + y * CHUNK_SIZE + z * CHUNK_SIZE_SQUARED] = block;
+  chunk->changed = 1;
 }
