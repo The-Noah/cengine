@@ -8,6 +8,8 @@ project "cengine"
   files {"src/**.h", "src/**.c"}
 
   includedirs "include/"
+  staticruntime "On"
+  flags {"LinkTimeOptimization"}
 
   disablewarnings {"trigraphs"}
 

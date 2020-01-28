@@ -13,8 +13,7 @@ unsigned int texture_create(const char* name){
   texture_bind(texture, 0);
 
   unsigned char name_length = 0;
-  char* i;
-  for(i = name; *i; i++){
+  for(const char* i = name; *i; i++){
     name_length++;
   }
 

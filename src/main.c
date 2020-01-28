@@ -10,13 +10,14 @@
 #include "camera.h"
 #include "states/game_state.h"
 #include "states/menu_state.h"
+#include "states/voxel_state.h"
 
 double deltaTime = 0.0;
 char firstMouse = 1;
 float lastX = 400.0f, lastY = 300.0f;
 
 CEngine cengine;
-State game_state;
+State voxel_state;
 
 unsigned char escPress = 0;
 unsigned char f1Press = 0;
@@ -32,7 +33,7 @@ void processInput(GLFWwindow *window){
     mousePress = 1;
   }else if(mousePress == 1 && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE){
     if(cengine.state_manager.top < 1){
-      state_manager_push(&cengine.state_manager, &game_state);
+      state_manager_push(&cengine.state_manager, &voxel_state);
     }
     mousePress = 0;
   }
@@ -41,7 +42,7 @@ void processInput(GLFWwindow *window){
     return;
   }
 
-  const float camera_speed = 7.0f * deltaTime;
+  const float camera_speed = 15.0f * deltaTime;
   if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
     camera_move_forward(camera_speed);
   }
@@ -106,10 +107,16 @@ int main(){
   menu_state.draw = menu_state_draw;
   state_manager_push(&cengine.state_manager, &menu_state);
 
+  State game_state;
   game_state.init = game_state_init;
   game_state.destroy = game_state_destroy;
   game_state.update = game_state_update;
   game_state.draw = game_state_draw;
+
+  voxel_state.init = voxel_state_init;
+  voxel_state.destroy = voxel_state_destroy;
+  voxel_state.update = voxel_state_update;
+  voxel_state.draw = voxel_state_draw;
 
   camera_init();
 
