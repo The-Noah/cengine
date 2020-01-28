@@ -11,8 +11,6 @@
 
 unsigned int skybox_shader, skybox_projection_location, skybox_view_location;
 
-#define SKYBOX_SIZE 50
-
 #define DAY_COLOR (vec3){0.3f, 0.6f, 0.8f}
 #define SUNSET_COLOR (vec3){0.8f, 0.4f, 0.1f}
 

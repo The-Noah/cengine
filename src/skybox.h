@@ -1,6 +1,8 @@
 #ifndef SKYBOX_H
 #define SKYBOX_H
 
+#define SKYBOX_SIZE 100
+
 typedef struct{
   unsigned int vao;
 } Skybox;

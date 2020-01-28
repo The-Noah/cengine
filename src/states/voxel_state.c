@@ -81,7 +81,7 @@ void voxel_state_draw(){
   texture_bind(texture, 0);
 
   mat4 projection = GLMS_MAT4_IDENTITY_INIT;
-  glm_perspective(glm_rad(65.0f), (float)cengine.width/(float)cengine.height, 0.1f, 100.0f, projection);
+  glm_perspective(glm_rad(65.0f), (float)cengine.width/(float)cengine.height, 0.1f, SKYBOX_SIZE * 2.0f, projection);
   shader_uniform_matrix4fv_at(projection_location, projection[0]);
 
   glUniformMatrix4fv(view_location, 1, GL_FALSE, view[0]);
