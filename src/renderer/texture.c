@@ -1,13 +1,11 @@
 #include "texture.h"
 
-#define GLEW_STATIC
-#include <GL/glew.h>
 #define STB_IMAGE_IMPLEMENTATION	
 #include <stb_image.h>
 
 #define RES_PATH "res/"
 
-unsigned int texture_create(const char* name){
+unsigned int texture_create(const char* name, GLenum filter){
   unsigned int texture;
   glGenTextures(1, &texture);
   texture_bind(texture, 0);
@@ -28,9 +26,8 @@ unsigned int texture_create(const char* name){
 
   if(data){
     glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB_ALPHA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
   }else{
     fprintf(stderr, "failed to load texture: %s\n", name_buffer);
   }

@@ -100,11 +100,11 @@ void game_state_init(){
   }
 #endif
 
-  texture = texture_create("spawnbeacon.png");
-  texture_normal = texture_create("spawnbeacon_normal.png");
-  texture_brickwall = texture_create("brickwall.png");
-  texture_brickwall_specular = texture_create("brickwall_specular.png");
-  texture_brickwall_normal = texture_create("brickwall_normal.png");
+  texture = texture_create("spawnbeacon.png", GL_LINEAR);
+  texture_normal = texture_create("spawnbeacon_normal.png", GL_LINEAR);
+  texture_brickwall = texture_create("brickwall.png", GL_LINEAR);
+  texture_brickwall_specular = texture_create("brickwall_specular.png", GL_LINEAR);
+  texture_brickwall_normal = texture_create("brickwall_normal.png", GL_LINEAR);
 
   projection_location = shader_uniform_position(shader, "projection");
 

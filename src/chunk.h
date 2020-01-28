@@ -12,11 +12,9 @@
 
 typedef GLbyte byte4[4];
 
-void byte4_set(GLbyte x, GLbyte y, GLbyte z, GLbyte w, byte4 dest);
-
 struct chunk{
   uint8_t *blocks;
-  unsigned int vbo;
+  unsigned int vao;
   int elements;
   uint8_t changed;
 };

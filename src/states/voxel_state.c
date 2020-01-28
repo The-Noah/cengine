@@ -10,6 +10,7 @@
 #include <cglm/struct.h>
 
 #include "../renderer/shader.h"
+#include "../renderer/texture.h"
 #include "../main.h"
 #include "../camera.h"
 #include "../skybox.h"
@@ -23,9 +24,11 @@ char* voxel_fragment_shader_source = ""
   #include "../shaders/voxel.fs"
 ;
 
-unsigned int shader, projection_location, view_location;
+unsigned int shader, projection_location, view_location, texture;
 Skybox skybox;
 struct chunk* chunk;
+
+unsigned char reloadPress = 0;
 
 void voxel_state_init(){
   printf("voxel state init\n");
@@ -35,6 +38,9 @@ void voxel_state_init(){
 
   projection_location = shader_uniform_position(shader, "projection");
   view_location = shader_uniform_position(shader, "view");
+  shader_uniform1i(shader, "diffuse_texture", 0);
+
+  texture = texture_create("grass.png", GL_NEAREST);
 
   chunk = chunk_init();
 
@@ -52,15 +58,27 @@ void voxel_state_destroy(){
   skybox_delete(&skybox);
   skybox_free();
 
+  texture_delete(&texture);
+  shader_delete(shader);
+
   glfwSetInputMode(cengine.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
 void voxel_state_update(float deltaTime){
-
+  if(glfwGetKey(cengine.window, GLFW_KEY_F11) == GLFW_PRESS){
+    reloadPress = 1;
+  }else if(reloadPress == 1 && glfwGetKey(cengine.window, GLFW_KEY_F11) == GLFW_RELEASE){
+    reloadPress = 0;
+    printf("reloading...\n");
+    voxel_state_destroy();
+    voxel_state_init();
+    printf("done\n");
+  }
 }
 
 void voxel_state_draw(){
   shader_bind(shader);
+  texture_bind(texture, 0);
 
   mat4 projection = GLMS_MAT4_IDENTITY_INIT;
   glm_perspective(glm_rad(65.0f), (float)cengine.width/(float)cengine.height, 0.1f, 100.0f, projection);

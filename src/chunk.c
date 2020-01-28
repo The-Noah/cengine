@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 #include "noise.h"
+#include "renderer/utils.h"
 
 void byte4_set(GLbyte x, GLbyte y, GLbyte z, GLbyte w, byte4 dest){
   dest[0] = x;
@@ -23,7 +24,7 @@ struct chunk* chunk_init(){
   chunk->blocks = malloc(CHUNK_SIZE_CUBED * sizeof(uint8_t));
   chunk->elements = 0;
   chunk->changed = 1;
-  glGenBuffers(1, &chunk->vbo);
+  glGenVertexArrays(1, &chunk->vao);
 
   unsigned int count = 0;
   for(uint8_t x = 0; x < CHUNK_SIZE; x++){
@@ -45,15 +46,17 @@ struct chunk* chunk_init(){
 }
 
 void chunk_free(struct chunk *chunk){
-  glDeleteBuffers(1, &chunk->vbo);
+  glDeleteVertexArrays(1, &chunk->vao);
   free(chunk->blocks);
 }
 
 void chunk_update(struct chunk *chunk){
   chunk->changed = 0;
 
-  byte4 *vertex = malloc(CHUNK_SIZE_CUBED * 36 * sizeof(byte4));
+  byte4 *vertex = malloc(CHUNK_SIZE_CUBED * 2 * sizeof(byte4));
+  char *brightness = malloc(CHUNK_SIZE_CUBED * 2 * sizeof(char));
   unsigned int i = 0;
+  unsigned int j = 0;
 
   for(uint8_t y = 0; y < CHUNK_SIZE; y++){
     for(uint8_t x = 0; x < CHUNK_SIZE; x++){
@@ -72,6 +75,9 @@ void chunk_update(struct chunk *chunk){
           byte4_set(x, y + 1, z, block, vertex[i++]);
           byte4_set(x, y, z + 1, block, vertex[i++]);
           byte4_set(x, y + 1, z + 1, block, vertex[i++]);
+          for(int k = 0; k < 6; k++){
+            brightness[j++] = 0;
+          }
         }
 
         // +x
@@ -82,6 +88,9 @@ void chunk_update(struct chunk *chunk){
           byte4_set(x + 1, y + 1, z + 1, block, vertex[i++]);
           byte4_set(x + 1, y, z + 1, block, vertex[i++]);
           byte4_set(x + 1, y + 1, z, block, vertex[i++]);
+          for(int k = 0; k < 6; k++){
+            brightness[j++] = 0;
+          }
         }
 
         // -z
@@ -92,6 +101,9 @@ void chunk_update(struct chunk *chunk){
           byte4_set(x + 1, y + 1, z, block, vertex[i++]);
           byte4_set(x + 1, y, z, block, vertex[i++]);
           byte4_set(x, y + 1, z, block, vertex[i++]);
+          for(int k = 0; k < 6; k++){
+            brightness[j++] = 1;
+          }
         }
 
         // +z
@@ -102,6 +114,9 @@ void chunk_update(struct chunk *chunk){
           byte4_set(x, y + 1, z + 1, block, vertex[i++]);
           byte4_set(x + 1, y, z + 1, block, vertex[i++]);
           byte4_set(x + 1, y + 1, z + 1, block, vertex[i++]);
+          for(int k = 0; k < 6; k++){
+            brightness[j++] = 1;
+          }
         }
 
         // -y
@@ -112,6 +127,9 @@ void chunk_update(struct chunk *chunk){
           byte4_set(x + 1, y, z + 1, block, vertex[i++]);
           byte4_set(x, y, z + 1, block, vertex[i++]);
           byte4_set(x + 1, y, z, block, vertex[i++]);
+          for(int k = 0; k < 6; k++){
+            brightness[j++] = 2;
+          }
         }
 
         // +y
@@ -122,6 +140,9 @@ void chunk_update(struct chunk *chunk){
           byte4_set(x + 1, y + 1, z, block, vertex[i++]);
           byte4_set(x, y + 1, z + 1, block, vertex[i++]);
           byte4_set(x + 1, y + 1, z + 1, block, vertex[i++]);
+          for(int k = 0; k < 6; k++){
+            brightness[j++] = 2;
+          }
         }
       }
     }
@@ -130,9 +151,21 @@ void chunk_update(struct chunk *chunk){
   printf("%d blocks in chunk\n", i / 36);
   chunk->elements = i;
 
-  glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo);
-  glBufferData(GL_ARRAY_BUFFER, chunk->elements * sizeof(*vertex), vertex, GL_STATIC_DRAW);
+  glBindVertexArray(chunk->vao);
 
+  unsigned int vertex_buffer = make_buffer(GL_ARRAY_BUFFER, chunk->elements * sizeof(*vertex), vertex);
+  glVertexAttribPointer(0, 4, GL_BYTE, GL_FALSE, 0, 0);
+  glEnableVertexAttribArray(0);
+
+  unsigned int brightness_buffer = make_buffer(GL_ARRAY_BUFFER, j * sizeof(*brightness), brightness);
+  glVertexAttribIPointer(1, 1, GL_BYTE, 0, 0);
+  glEnableVertexAttribArray(1);
+
+  glBindVertexArray(0);
+  glDeleteBuffers(1, &vertex_buffer);
+  glDeleteBuffers(1, &brightness_buffer);
+
+  free(brightness);
   free(vertex);
 }
 
@@ -145,8 +178,7 @@ void chunk_draw(struct chunk *chunk){
     return;
   }
 
-  glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo);
-  glVertexAttribPointer(0, 4, GL_BYTE, GL_FALSE, 0, 0);
+  glBindVertexArray(chunk->vao);
   glDrawArrays(GL_TRIANGLES, 0, chunk->elements);
 }
 
@@ -157,10 +189,10 @@ uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
     return 0;
   }
 
-  return chunk->blocks[x + y * CHUNK_SIZE + z * CHUNK_SIZE_SQUARED];
+  return chunk->blocks[block_index(x, y, z)];
 }
 
 void set(struct chunk *chunk, int x, int y, int z, uint8_t block){
-  chunk->blocks[x + y * CHUNK_SIZE + z * CHUNK_SIZE_SQUARED] = block;
+  chunk->blocks[block_index(x, y, z)] = block;
   chunk->changed = 1;
 }
