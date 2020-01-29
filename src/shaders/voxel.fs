@@ -9,6 +9,7 @@
 "uniform sampler2D diffuse_texture;\n"
 
 "void main(){\n"
+// "  vec3 color = texture(diffuse_texture, vec2(fract(vTexCoord.x + vTexCoord.z) / 4.0, vTexCoord.y)).rgb;\n"
 "  vec3 color = texture(diffuse_texture, vTexCoord).rgb;\n"
 
 "  vec3 normal = normalize(vNormal);"

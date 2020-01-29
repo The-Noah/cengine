@@ -28,6 +28,7 @@ unsigned int texture_create(const char* name, GLenum filter){
     glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB_ALPHA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+    glTexParameteri(GL_TEXTURE_2D, GL_REPEAT, GL_REPEAT);
   }else{
     fprintf(stderr, "failed to load texture: %s\n", name_buffer);
   }

@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define CGLM_ALL_UNALIGNED
+#include <cglm/cglm.h>
+
 #include "noise.h"
 #include "renderer/utils.h"
 
@@ -42,7 +45,9 @@ struct chunk* chunk_init(int x, int z){
       int h = (f + 1) / 2 * (CHUNK_SIZE - 1) + 1;
 
       for(uint8_t dy = 0; dy < CHUNK_SIZE; dy++){
-        chunk->blocks[block_index(dx, dy, dz)] = dy < h ? 1 : 0;
+        uint8_t thickness = h - dy;
+        uint8_t block = thickness == 1 ? 1 : thickness <= 3 ? 3 : 2;
+        chunk->blocks[block_index(dx, dy, dz)] = dy < h ? dy == 0 ? 4 : block : 0;
         if(dy < h){
           count++;
         }
@@ -66,8 +71,15 @@ void chunk_update(struct chunk *chunk){
   byte4 *vertex = malloc(CHUNK_SIZE_CUBED * 2 * sizeof(byte4));
   char *brightness = malloc(CHUNK_SIZE_CUBED * 2 * sizeof(char));
   byte3 *normal = malloc(CHUNK_SIZE_CUBED * 2 * sizeof(byte3));
+  float *texCoords = malloc(CHUNK_SIZE_CUBED * 4 * sizeof(float));
   unsigned int i = 0;
   unsigned int j = 0;
+  unsigned int texCoord = 0;
+
+  float s = 0.25f;
+  float du, dv;
+  float a = 0.0f;
+  float b = s;
 
   for(uint8_t y = 0; y < CHUNK_SIZE; y++){
     for(uint8_t x = 0; x < CHUNK_SIZE; x++){
@@ -78,88 +90,150 @@ void chunk_update(struct chunk *chunk){
           continue;
         }
 
+        uint8_t w = block - 1;
+
         // -x
         if(chunk_get(chunk, x - 1, y, z) == 0){
+          du = w * s; dv = s;
+
+          byte4_set(x, y, z, block, vertex[i++]);
+          byte4_set(x, y + 1, z + 1, block, vertex[i++]);
+          byte4_set(x, y + 1, z, block, vertex[i++]);
           byte4_set(x, y, z, block, vertex[i++]);
           byte4_set(x, y, z + 1, block, vertex[i++]);
-          byte4_set(x, y + 1, z, block, vertex[i++]);
-          byte4_set(x, y + 1, z, block, vertex[i++]);
-          byte4_set(x, y, z + 1, block, vertex[i++]);
           byte4_set(x, y + 1, z + 1, block, vertex[i++]);
+
           for(int k = 0; k < 6; k++){
             brightness[j] = 0;
             byte3_set(-1, 0, 0, normal[j++]);
           }
+
+          texCoords[texCoord++] = a + du; texCoords[texCoord++] = a + dv;
+          texCoords[texCoord++] = b + du; texCoords[texCoord++] = b + dv;
+          texCoords[texCoord++] = a + du; texCoords[texCoord++] = b + dv;
+          texCoords[texCoord++] = a + du; texCoords[texCoord++] = a + dv;
+          texCoords[texCoord++] = b + du; texCoords[texCoord++] = a + dv;
+          texCoords[texCoord++] = b + du; texCoords[texCoord++] = b + dv;
         }
 
         // +x
         if(chunk_get(chunk, x + 1, y, z) == 0){
-          byte4_set(x + 1, y + 1, z, block, vertex[i++]);
-          byte4_set(x + 1, y, z + 1, block, vertex[i++]);
+          du = w * s; dv = s;
+
           byte4_set(x + 1, y, z, block, vertex[i++]);
           byte4_set(x + 1, y + 1, z + 1, block, vertex[i++]);
           byte4_set(x + 1, y, z + 1, block, vertex[i++]);
+          byte4_set(x + 1, y, z, block, vertex[i++]);
           byte4_set(x + 1, y + 1, z, block, vertex[i++]);
+          byte4_set(x + 1, y + 1, z + 1, block, vertex[i++]);
+
           for(int k = 0; k < 6; k++){
             brightness[j] = 0;
             byte3_set(1, 0, 0, normal[j++]);
           }
+
+          texCoords[texCoord++] = b + du; texCoords[texCoord++] = a + dv;
+          texCoords[texCoord++] = a + du; texCoords[texCoord++] = b + dv;
+          texCoords[texCoord++] = a + du; texCoords[texCoord++] = a + dv;
+          texCoords[texCoord++] = b + du; texCoords[texCoord++] = a + dv;
+          texCoords[texCoord++] = b + du; texCoords[texCoord++] = b + dv;
+          texCoords[texCoord++] = a + du; texCoords[texCoord++] = b + dv;
         }
 
         // -z
         if(chunk_get(chunk, x, y, z - 1) == 0){
-          byte4_set(x, y + 1, z, block, vertex[i++]);
-          byte4_set(x + 1, y, z, block, vertex[i++]);
+          du = w * s ; dv = s;
+
           byte4_set(x, y, z, block, vertex[i++]);
           byte4_set(x + 1, y + 1, z, block, vertex[i++]);
           byte4_set(x + 1, y, z, block, vertex[i++]);
+          byte4_set(x, y, z, block, vertex[i++]);
           byte4_set(x, y + 1, z, block, vertex[i++]);
+          byte4_set(x + 1, y + 1, z, block, vertex[i++]);
+
           for(int k = 0; k < 6; k++){
             brightness[j] = 1;
             byte3_set(0, 0, -1, normal[j++]);
           }
+
+          texCoords[texCoord++] = a + du; texCoords[texCoord++] = a + dv;
+          texCoords[texCoord++] = b + du; texCoords[texCoord++] = b + dv;
+          texCoords[texCoord++] = b + du; texCoords[texCoord++] = a + dv;
+          texCoords[texCoord++] = a + du; texCoords[texCoord++] = a + dv;
+          texCoords[texCoord++] = a + du; texCoords[texCoord++] = b + dv;
+          texCoords[texCoord++] = b + du; texCoords[texCoord++] = b + dv;
         }
 
         // +z
         if(chunk_get(chunk, x, y, z + 1) == 0){
+          du = w * s ; dv = s;
+
           byte4_set(x, y, z + 1, block, vertex[i++]);
           byte4_set(x + 1, y, z + 1, block, vertex[i++]);
-          byte4_set(x, y + 1, z + 1, block, vertex[i++]);
-          byte4_set(x, y + 1, z + 1, block, vertex[i++]);
-          byte4_set(x + 1, y, z + 1, block, vertex[i++]);
           byte4_set(x + 1, y + 1, z + 1, block, vertex[i++]);
+          byte4_set(x, y, z + 1, block, vertex[i++]);
+          byte4_set(x + 1, y + 1, z + 1, block, vertex[i++]);
+          byte4_set(x, y + 1, z + 1, block, vertex[i++]);
+
           for(int k = 0; k < 6; k++){
             brightness[j] = 1;
             byte3_set(0, 0, 1, normal[j++]);
           }
+
+          texCoords[texCoord++] = a + du; texCoords[texCoord++] = a + dv;
+          texCoords[texCoord++] = b + du; texCoords[texCoord++] = a + dv;
+          texCoords[texCoord++] = b + du; texCoords[texCoord++] = b + dv;
+          texCoords[texCoord++] = a + du; texCoords[texCoord++] = a + dv;
+          texCoords[texCoord++] = b + du; texCoords[texCoord++] = b + dv;
+          texCoords[texCoord++] = a + du; texCoords[texCoord++] = b + dv;
         }
 
         // -y
         if(chunk_get(chunk, x, y - 1, z) == 0){
+          du = w * s; dv = 0.0f;
+
+          byte4_set(x, y, z, block, vertex[i++]);
           byte4_set(x + 1, y, z, block, vertex[i++]);
-          byte4_set(x, y, z + 1, block, vertex[i++]);
+          byte4_set(x + 1, y, z + 1, block, vertex[i++]);
           byte4_set(x, y, z, block, vertex[i++]);
           byte4_set(x + 1, y, z + 1, block, vertex[i++]);
           byte4_set(x, y, z + 1, block, vertex[i++]);
-          byte4_set(x + 1, y, z, block, vertex[i++]);
+
           for(int k = 0; k < 6; k++){
             brightness[j] = 2;
             byte3_set(0, -1, 0, normal[j++]);
           }
+
+          texCoords[texCoord++] = a + du; texCoords[texCoord++] = a + dv;
+          texCoords[texCoord++] = b + du; texCoords[texCoord++] = a + dv;
+          texCoords[texCoord++] = b + du; texCoords[texCoord++] = b + dv;
+          texCoords[texCoord++] = a + du; texCoords[texCoord++] = a + dv;
+          texCoords[texCoord++] = b + du; texCoords[texCoord++] = b + dv;
+          texCoords[texCoord++] = a + du; texCoords[texCoord++] = b + dv;
         }
 
         // +y
         if(chunk_get(chunk, x, y + 1, z) == 0){
+          du = w * s; dv = s + s;
+
           byte4_set(x, y + 1, z, block, vertex[i++]);
           byte4_set(x, y + 1, z + 1, block, vertex[i++]);
-          byte4_set(x + 1, y + 1, z, block, vertex[i++]);
-          byte4_set(x + 1, y + 1, z, block, vertex[i++]);
-          byte4_set(x, y + 1, z + 1, block, vertex[i++]);
           byte4_set(x + 1, y + 1, z + 1, block, vertex[i++]);
+          byte4_set(x, y + 1, z, block, vertex[i++]);
+          byte4_set(x + 1, y + 1, z + 1, block, vertex[i++]);
+          byte4_set(x + 1, y + 1, z, block, vertex[i++]);
+
           for(int k = 0; k < 6; k++){
             brightness[j] = 2;
             byte3_set(0, 1, 0, normal[j++]);
           }
+
+          texCoords[texCoord++] = a + du; texCoords[texCoord++] = b + dv;
+          texCoords[texCoord++] = a + du; texCoords[texCoord++] = a + dv;
+          texCoords[texCoord++] = b + du; texCoords[texCoord++] = a + dv;
+          texCoords[texCoord++] = a + du; texCoords[texCoord++] = b + dv;
+          texCoords[texCoord++] = b + du; texCoords[texCoord++] = a + dv;
+          texCoords[texCoord++] = b + du; texCoords[texCoord++] = b + dv;
         }
       }
     }
@@ -181,14 +255,20 @@ void chunk_update(struct chunk *chunk){
   glVertexAttribPointer(2, 3, GL_BYTE, GL_FALSE, 0, 0);
   glEnableVertexAttribArray(2);
 
+  unsigned int texure_buffer = make_buffer(GL_ARRAY_BUFFER, texCoord * sizeof(*texCoords), texCoords);
+  glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 0, 0);
+  glEnableVertexAttribArray(3);
+
   glBindVertexArray(0);
   glDeleteBuffers(1, &vertex_buffer);
   glDeleteBuffers(1, &brightness_buffer);
   glDeleteBuffers(1, &normal_buffer);
+  glDeleteBuffers(1, &texure_buffer);
 
   free(vertex);
   free(brightness);
   free(normal);
+  free(texCoords);
 }
 
 void chunk_draw(struct chunk *chunk){

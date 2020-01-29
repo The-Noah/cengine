@@ -20,7 +20,7 @@
 #define CHUNK_CREATE_RADIUS 31
 #define CHUNK_RENDER_RADIUS 31
 #define CHUNK_DELETE_RADIUS 32
-#define CHUNK_MAX_GENERATED_PER_FRAME 16
+#define CHUNK_MAX_GENERATED_PER_FRAME 32
 
 char* voxel_vertex_shader_source = ""
   #include "../shaders/voxel.vs"
@@ -100,7 +100,7 @@ void voxel_state_init(){
   camera_position_location = shader_uniform_position(shader, "camera_position");
   shader_uniform1i(shader, "diffuse_texture", 0);
 
-  texture = texture_create("grass.png", GL_NEAREST);
+  texture = texture_create("tiles.png", GL_NEAREST);
 
   skybox_init();
   skybox_create(&skybox);
