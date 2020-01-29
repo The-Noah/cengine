@@ -3,7 +3,7 @@
 #include <math.h>
 #include <stdio.h>
 
-vec3 camera_position = {0.0f, 1.5f, 5.0f};
+vec3 camera_position = {0.0f, 32.0f, 0.0f};
 mat4 view = GLMS_MAT4_IDENTITY_INIT;
 float camera_yaw = -90.0f;
 float camera_pitch = 0.0f;

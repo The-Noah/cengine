@@ -1,7 +1,7 @@
 #ifndef SKYBOX_H
 #define SKYBOX_H
 
-#define SKYBOX_SIZE 100
+#define SKYBOX_SIZE 1000
 
 typedef struct{
   unsigned int vao;

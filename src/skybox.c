@@ -14,7 +14,7 @@ unsigned int skybox_shader, skybox_projection_location, skybox_view_location;
 #define DAY_COLOR (vec3){0.3f, 0.6f, 0.8f}
 #define SUNSET_COLOR (vec3){0.8f, 0.4f, 0.1f}
 
-const char skybox_vertices[] = {
+const short skybox_vertices[] = {
    SKYBOX_SIZE,  SKYBOX_SIZE,  SKYBOX_SIZE,
   -SKYBOX_SIZE,  SKYBOX_SIZE,  SKYBOX_SIZE,
   -SKYBOX_SIZE, -SKYBOX_SIZE,  SKYBOX_SIZE,
@@ -88,7 +88,7 @@ void skybox_create(Skybox *skybox){
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(skybox_indices), skybox_indices, GL_STATIC_DRAW);
 
   // position
-  glVertexAttribPointer(0, 3, GL_BYTE, GL_FALSE, 3 * sizeof(char), (void*)0);
+  glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, 3 * sizeof(short), (void*)0);
   glEnableVertexAttribArray(0);
 
   glBindVertexArray(0);

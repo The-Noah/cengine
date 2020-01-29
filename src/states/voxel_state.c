@@ -16,6 +16,12 @@
 #include "../skybox.h"
 #include "../chunk.h"
 
+#define MAX_CHUNKS 4096
+#define CHUNK_CREATE_RADIUS 31
+#define CHUNK_RENDER_RADIUS 31
+#define CHUNK_DELETE_RADIUS 32
+#define CHUNK_MAX_GENERATED_PER_FRAME 16
+
 char* voxel_vertex_shader_source = ""
   #include "../shaders/voxel.vs"
 ;
@@ -26,9 +32,62 @@ char* voxel_fragment_shader_source = ""
 
 unsigned int shader, projection_location, view_location, texture;
 Skybox skybox;
-struct chunk* chunk;
+struct chunk *chunks[MAX_CHUNKS];
+unsigned short chunk_count = 0;
 
 unsigned char reloadPress = 0;
+
+void ensure_chunks(int x, int z){
+  for(unsigned short i = 0; i < chunk_count; i++){
+    struct chunk *chunk = chunks[i];
+    int dx = x - chunk->x;
+    int dz = z - chunk->z;
+
+    if(abs(dx) >= CHUNK_DELETE_RADIUS || abs(dz) >= CHUNK_DELETE_RADIUS){
+      chunk_free(chunk);
+
+      struct chunk *other = chunks[chunk_count - 1];
+      chunk->blocks = other->blocks;
+      chunk->vao = other->vao;
+      chunk->elements = other->elements;
+      chunk->changed = other->changed;
+      chunk->x = other->x;
+      chunk->z = other->z;
+      chunk_count--;
+    }
+  }
+
+  unsigned short chunks_created = 0;
+  for(char i = -CHUNK_CREATE_RADIUS; i <= CHUNK_CREATE_RADIUS; i++){
+    if(chunks_created >= CHUNK_MAX_GENERATED_PER_FRAME){
+      break;
+    }
+
+    for(char j = -CHUNK_CREATE_RADIUS; j <= CHUNK_CREATE_RADIUS; j++){
+      if(chunks_created >= CHUNK_MAX_GENERATED_PER_FRAME){
+        break;
+      }
+
+      int a = x + i;
+      int b = z + j;
+      unsigned char create = 1;
+
+      for(unsigned short k = 0; k < chunk_count; k++){
+        struct chunk *chunk = chunks[k];
+        if(chunk->x == a && chunk->z == b){
+          create = 0;
+          break;
+        }
+      }
+
+      if(create){
+        struct chunk *chunk = chunk_init(a, b);
+        chunks[chunk_count++] = chunk;
+        chunks_created++;
+      }
+    }
+  }
+}
 
 void voxel_state_init(){
   printf("voxel state init\n");
@@ -42,8 +101,6 @@ void voxel_state_init(){
 
   texture = texture_create("grass.png", GL_NEAREST);
 
-  chunk = chunk_init();
-
   skybox_init();
   skybox_create(&skybox);
 
@@ -53,7 +110,9 @@ void voxel_state_init(){
 void voxel_state_destroy(){
   printf("voxel state destroy\n");
 
-  chunk_free(chunk);
+  for(unsigned short i = 0; i < chunk_count; i++){
+    chunk_free(chunks[i]);
+  }
 
   skybox_delete(&skybox);
   skybox_free();
@@ -86,10 +145,25 @@ void voxel_state_draw(){
 
   glUniformMatrix4fv(view_location, 1, GL_FALSE, view[0]);
 
-  mat4 model = GLMS_MAT4_IDENTITY_INIT;
-  shader_uniform_matrix4fv(shader, "model", model[0]);
+  int x = floor(camera_position[0] / CHUNK_SIZE);
+  int z = floor(camera_position[2] / CHUNK_SIZE);
+  ensure_chunks(x, z);
 
-  chunk_draw(chunk);
+  for(unsigned short i = 0; i < chunk_count; i++){
+    struct chunk *chunk = chunks[i];
+    int dx = x - chunk->x;
+    int dz = z - chunk->z;
+
+    if(abs(dx) > CHUNK_RENDER_RADIUS || abs(dz) > CHUNK_RENDER_RADIUS){
+      continue;
+    }
+
+    mat4 model = GLMS_MAT4_IDENTITY_INIT;
+    glm_translate(model, (vec3){chunks[i]->x * CHUNK_SIZE, 0, chunks[i]->z * CHUNK_SIZE});
+    shader_uniform_matrix4fv(shader, "model", model[0]);
+
+    chunk_draw(chunks[i]);
+  }
 
   skybox_projection(projection[0]);
   skybox_draw(&skybox);

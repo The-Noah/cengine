@@ -17,30 +17,34 @@ unsigned short block_index(uint8_t x, uint8_t y, uint8_t z){
   return x + y * CHUNK_SIZE + z * CHUNK_SIZE_SQUARED;
 }
 
-struct chunk* chunk_init(){
-  printf("creating chunk\n");
+struct chunk* chunk_init(int x, int z){
   struct chunk* chunk = malloc(sizeof(struct chunk));
-
   chunk->blocks = malloc(CHUNK_SIZE_CUBED * sizeof(uint8_t));
   chunk->elements = 0;
   chunk->changed = 1;
+  chunk->x = x;
+  chunk->z = z;
   glGenVertexArrays(1, &chunk->vao);
 
   unsigned int count = 0;
-  for(uint8_t x = 0; x < CHUNK_SIZE; x++){
-    for(uint8_t z = 0; z < CHUNK_SIZE; z++){
-      float f = simplex2(x * 0.05f, z * 0.05f, 5, 0.5f, 2.0f);
+  for(uint8_t dx = 0; dx < CHUNK_SIZE; dx++){
+    for(uint8_t dz = 0; dz < CHUNK_SIZE; dz++){
+      int cx = chunk->x * CHUNK_SIZE + dx;
+      int cz = chunk->z * CHUNK_SIZE + dz;
+
+      float f = simplex2(cx * 0.01f, cz * 0.01f, 4, 0.5f, 2.0f);
       int h = (f + 1) / 2 * (CHUNK_SIZE - 1) + 1;
 
-      for(uint8_t y = 0; y < CHUNK_SIZE; y++){
-        chunk->blocks[block_index(x, y, z)] = y < h ? 1 : 0;
-        if(y < h){
+      for(uint8_t dy = 0; dy < CHUNK_SIZE; dy++){
+        chunk->blocks[block_index(dx, dy, dz)] = dy < h ? 1 : 0;
+        if(dy < h){
           count++;
         }
       }
     }
   }
-  printf("generated chunk with %d blocks\n", count);
+
+  // printf("generated chunk at %d %d with %d blocks\n", x, z, count);
 
   return chunk;
 }
@@ -148,7 +152,6 @@ void chunk_update(struct chunk *chunk){
     }
   }
 
-  printf("%d blocks in chunk\n", i / 36);
   chunk->elements = i;
 
   glBindVertexArray(chunk->vao);

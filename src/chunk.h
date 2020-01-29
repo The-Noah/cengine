@@ -17,9 +17,11 @@ struct chunk{
   unsigned int vao;
   int elements;
   uint8_t changed;
+  int x;
+  int z;
 };
 
-struct chunk* chunk_init();
+struct chunk* chunk_init(int x, int z);
 void chunk_free(struct chunk *chunk);
 void chunk_draw(struct chunk *chunk);
 uint8_t chunk_get(struct chunk *chunk, int x, int y, int z);
