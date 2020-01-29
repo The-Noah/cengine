@@ -13,6 +13,12 @@ void byte4_set(GLbyte x, GLbyte y, GLbyte z, GLbyte w, byte4 dest){
   dest[3] = w;
 }
 
+void byte3_set(GLbyte x, GLbyte y, GLbyte z, byte3 dest){
+  dest[0] = x;
+  dest[1] = y;
+  dest[2] = z;
+}
+
 unsigned short block_index(uint8_t x, uint8_t y, uint8_t z){
   return x + y * CHUNK_SIZE + z * CHUNK_SIZE_SQUARED;
 }
@@ -59,6 +65,7 @@ void chunk_update(struct chunk *chunk){
 
   byte4 *vertex = malloc(CHUNK_SIZE_CUBED * 2 * sizeof(byte4));
   char *brightness = malloc(CHUNK_SIZE_CUBED * 2 * sizeof(char));
+  byte3 *normal = malloc(CHUNK_SIZE_CUBED * 2 * sizeof(byte3));
   unsigned int i = 0;
   unsigned int j = 0;
 
@@ -80,7 +87,8 @@ void chunk_update(struct chunk *chunk){
           byte4_set(x, y, z + 1, block, vertex[i++]);
           byte4_set(x, y + 1, z + 1, block, vertex[i++]);
           for(int k = 0; k < 6; k++){
-            brightness[j++] = 0;
+            brightness[j] = 0;
+            byte3_set(-1, 0, 0, normal[j++]);
           }
         }
 
@@ -93,7 +101,8 @@ void chunk_update(struct chunk *chunk){
           byte4_set(x + 1, y, z + 1, block, vertex[i++]);
           byte4_set(x + 1, y + 1, z, block, vertex[i++]);
           for(int k = 0; k < 6; k++){
-            brightness[j++] = 0;
+            brightness[j] = 0;
+            byte3_set(1, 0, 0, normal[j++]);
           }
         }
 
@@ -106,7 +115,8 @@ void chunk_update(struct chunk *chunk){
           byte4_set(x + 1, y, z, block, vertex[i++]);
           byte4_set(x, y + 1, z, block, vertex[i++]);
           for(int k = 0; k < 6; k++){
-            brightness[j++] = 1;
+            brightness[j] = 1;
+            byte3_set(0, 0, -1, normal[j++]);
           }
         }
 
@@ -119,7 +129,8 @@ void chunk_update(struct chunk *chunk){
           byte4_set(x + 1, y, z + 1, block, vertex[i++]);
           byte4_set(x + 1, y + 1, z + 1, block, vertex[i++]);
           for(int k = 0; k < 6; k++){
-            brightness[j++] = 1;
+            brightness[j] = 1;
+            byte3_set(0, 0, 1, normal[j++]);
           }
         }
 
@@ -132,7 +143,8 @@ void chunk_update(struct chunk *chunk){
           byte4_set(x, y, z + 1, block, vertex[i++]);
           byte4_set(x + 1, y, z, block, vertex[i++]);
           for(int k = 0; k < 6; k++){
-            brightness[j++] = 2;
+            brightness[j] = 2;
+            byte3_set(0, -1, 0, normal[j++]);
           }
         }
 
@@ -145,7 +157,8 @@ void chunk_update(struct chunk *chunk){
           byte4_set(x, y + 1, z + 1, block, vertex[i++]);
           byte4_set(x + 1, y + 1, z + 1, block, vertex[i++]);
           for(int k = 0; k < 6; k++){
-            brightness[j++] = 2;
+            brightness[j] = 2;
+            byte3_set(0, 1, 0, normal[j++]);
           }
         }
       }
@@ -164,12 +177,18 @@ void chunk_update(struct chunk *chunk){
   glVertexAttribIPointer(1, 1, GL_BYTE, 0, 0);
   glEnableVertexAttribArray(1);
 
+  unsigned int normal_buffer = make_buffer(GL_ARRAY_BUFFER, j * sizeof(*normal), normal);
+  glVertexAttribPointer(2, 3, GL_BYTE, GL_FALSE, 0, 0);
+  glEnableVertexAttribArray(2);
+
   glBindVertexArray(0);
   glDeleteBuffers(1, &vertex_buffer);
   glDeleteBuffers(1, &brightness_buffer);
+  glDeleteBuffers(1, &normal_buffer);
 
-  free(brightness);
   free(vertex);
+  free(brightness);
+  free(normal);
 }
 
 void chunk_draw(struct chunk *chunk){

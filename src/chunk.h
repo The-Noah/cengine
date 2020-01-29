@@ -11,6 +11,7 @@
 #define CHUNK_SIZE_CUBED 32768
 
 typedef GLbyte byte4[4];
+typedef GLbyte byte3[3];
 
 struct chunk{
   uint8_t *blocks;

@@ -30,7 +30,7 @@ char* voxel_fragment_shader_source = ""
   #include "../shaders/voxel.fs"
 ;
 
-unsigned int shader, projection_location, view_location, texture;
+unsigned int shader, texture, projection_location, view_location, camera_position_location;
 Skybox skybox;
 struct chunk *chunks[MAX_CHUNKS];
 unsigned short chunk_count = 0;
@@ -97,6 +97,7 @@ void voxel_state_init(){
 
   projection_location = shader_uniform_position(shader, "projection");
   view_location = shader_uniform_position(shader, "view");
+  camera_position_location = shader_uniform_position(shader, "camera_position");
   shader_uniform1i(shader, "diffuse_texture", 0);
 
   texture = texture_create("grass.png", GL_NEAREST);
@@ -144,6 +145,7 @@ void voxel_state_draw(){
   shader_uniform_matrix4fv_at(projection_location, projection[0]);
 
   glUniformMatrix4fv(view_location, 1, GL_FALSE, view[0]);
+  glUniform3fv(camera_position_location, 1, camera_position);
 
   int x = floor(camera_position[0] / CHUNK_SIZE);
   int z = floor(camera_position[2] / CHUNK_SIZE);
