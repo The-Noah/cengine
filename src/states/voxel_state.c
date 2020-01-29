@@ -30,10 +30,12 @@ char* voxel_fragment_shader_source = ""
   #include "../shaders/voxel.fs"
 ;
 
-unsigned int shader, texture, projection_location, view_location, camera_position_location;
+unsigned int shader, texture, projection_location, view_location, camera_position_location, light_direction_location, light_intensity_location;
 Skybox skybox;
 struct chunk *chunks[MAX_CHUNKS];
 unsigned short chunk_count = 0;
+vec3 light_direction = {0.0f, 1.0f, 0.0f};
+float light_angle = 0.0f;
 
 unsigned char reloadPress = 0;
 
@@ -98,6 +100,8 @@ void voxel_state_init(){
   projection_location = shader_uniform_position(shader, "projection");
   view_location = shader_uniform_position(shader, "view");
   camera_position_location = shader_uniform_position(shader, "camera_position");
+  light_direction_location = shader_uniform_position(shader, "light_direction");
+  light_intensity_location = shader_uniform_position(shader, "light_intensity");
   shader_uniform1i(shader, "diffuse_texture", 0);
 
   texture = texture_create("tiles.png", GL_NEAREST);
@@ -134,11 +138,30 @@ void voxel_state_update(float deltaTime){
     voxel_state_init();
     printf("done\n");
   }
+
+  light_angle += 10.0f * deltaTime;
+  double light_angle_rad = glm_rad(light_angle);
+  light_direction[0] = (float)sin(light_angle_rad);
+  light_direction[1] = (float)cos(light_angle_rad);
 }
 
 void voxel_state_draw(){
   shader_bind(shader);
   texture_bind(texture, 0);
+
+  float light_intensity = 1.0f;
+  if(light_angle >= 90.0f){
+    light_intensity = 0.0f;
+
+    if(light_angle >= 360.0f){
+      light_angle = -90.0f;
+    }
+  }else if(light_angle <= -80.0f || light_angle >= 80.0f){
+    light_intensity = 1.0f - (float)(abs(light_angle) - 80.0f) / 10.0f;
+  }
+
+  glUniform3fv(light_direction_location, 1, light_direction);
+  glUniform1f(light_intensity_location, light_intensity);
 
   mat4 projection = GLMS_MAT4_IDENTITY_INIT;
   glm_perspective(glm_rad(65.0f), (float)cengine.width/(float)cengine.height, 0.1f, SKYBOX_SIZE * 2.0f, projection);

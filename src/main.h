@@ -4,5 +4,6 @@
 #include "cengine.h"
 
 CEngine cengine;
+double deltaTime;
 
 #endif
