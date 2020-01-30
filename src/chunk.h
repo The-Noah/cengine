@@ -28,7 +28,8 @@ struct chunk{
 unsigned short block_index(uint8_t x, uint8_t y, uint8_t z);
 struct chunk* chunk_init(int x, int z);
 void chunk_free(struct chunk *chunk);
-unsigned char chunk_draw(struct chunk *chunk);
+unsigned char chunk_update(struct chunk *chunk);
+void chunk_draw(struct chunk *chunk);
 uint8_t chunk_get(struct chunk *chunk, int x, int y, int z);
 void set(struct chunk *chunk, int x, int y, int z, uint8_t block);
 

@@ -17,7 +17,7 @@
 
 #define CHUNK_RENDER_RADIUS 6
 #define CHUNK_DELETE_RADIUS 8
-#define MAX_CHUNKS_GENERATED_PER_FRAME 32
+#define MAX_CHUNKS_GENERATED_PER_FRAME 4
 
 const static int8_t FACES[6][3] = {
   { 1, 0, 0},
@@ -70,10 +70,6 @@ void ensure_chunks(int x, int z){
   unsigned short chunks_created = 0;
   for(char i = -CHUNK_CREATE_RADIUS; i <= CHUNK_CREATE_RADIUS; i++){
     for(char j = -CHUNK_CREATE_RADIUS; j <= CHUNK_CREATE_RADIUS; j++){
-      if(chunks_created >= MAX_CHUNKS_GENERATED_PER_FRAME){
-        return;
-      }
-
       int a = x + i;
       int b = z + j;
       unsigned char create = 1;
@@ -279,10 +275,10 @@ void voxel_state_draw(){
   int z = floor(camera_position[2] / CHUNK_SIZE);
   ensure_chunks(x, z);
 
-  unsigned short chunks_generated = 0;
+  unsigned short chunk_meshes_generated = 0;
   for(unsigned short i = 0; i < chunk_count; i++){
-    if(chunks_ready == 0 || chunks_generated > MAX_CHUNKS_GENERATED_PER_FRAME){
-      break;
+    if(chunks_ready == 1 && chunk_meshes_generated < MAX_CHUNKS_GENERATED_PER_FRAME){
+      chunk_meshes_generated += chunk_update(chunks[i]);
     }
 
     struct chunk *chunk = chunks[i];
@@ -297,7 +293,7 @@ void voxel_state_draw(){
     glm_translate(model, (vec3){chunks[i]->x * CHUNK_SIZE, 0, chunks[i]->z * CHUNK_SIZE});
     shader_uniform_matrix4fv(shader, "model", model[0]);
 
-    chunks_generated += chunk_draw(chunks[i]);
+    chunk_draw(chunks[i]);
   }
 
   skybox_projection(projection[0]);

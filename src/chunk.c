@@ -66,7 +66,11 @@ void chunk_free(struct chunk *chunk){
   free(chunk->blocks);
 }
 
-void chunk_update(struct chunk *chunk){
+unsigned char chunk_update(struct chunk *chunk){
+  if(!chunk->changed){
+    return 0;
+  }
+
   chunk->changed = 0;
 
   byte4 *vertex = malloc(CHUNK_SIZE_CUBED * 2 * sizeof(byte4));
@@ -270,22 +274,17 @@ void chunk_update(struct chunk *chunk){
   free(brightness);
   free(normal);
   free(texCoords);
+
+  return 1;
 }
 
-unsigned char chunk_draw(struct chunk *chunk){
-  unsigned char updated = chunk->changed;
-  if(chunk->changed){
-    chunk_update(chunk);
-  }
-
+void chunk_draw(struct chunk *chunk){
   if(!chunk->elements){
-    return updated;
+    return;
   }
 
   glBindVertexArray(chunk->vao);
   glDrawArrays(GL_TRIANGLES, 0, chunk->elements);
-
-  return updated;
 }
 
 uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
