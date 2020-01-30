@@ -6,8 +6,10 @@
 #define CGLM_ALL_UNALIGNED
 #include <cglm/cglm.h>
 
-#include "noise.h"
 #include "renderer/utils.h"
+#include "noise.h"
+
+#define MAX(a, b) ((a) >= (b)) ? (a) : (b)
 
 void byte4_set(GLbyte x, GLbyte y, GLbyte z, GLbyte w, byte4 dest){
   dest[0] = x;
@@ -271,23 +273,45 @@ void chunk_update(struct chunk *chunk){
   free(texCoords);
 }
 
-void chunk_draw(struct chunk *chunk){
+unsigned char chunk_draw(struct chunk *chunk){
+  unsigned char updated = chunk->changed;
   if(chunk->changed){
     chunk_update(chunk);
   }
 
   if(!chunk->elements){
-    return;
+    return updated;
   }
 
   glBindVertexArray(chunk->vao);
   glDrawArrays(GL_TRIANGLES, 0, chunk->elements);
+
+  return updated;
 }
 
 uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
+  if(y < 0 || y >= CHUNK_SIZE){
+    return 0;
+  }
+
   if(x < 0 || x >= CHUNK_SIZE ||
-     y < 0 || y >= CHUNK_SIZE ||
      z < 0 || z >= CHUNK_SIZE){
+    vec2i block_global_position = {floor(chunk->x * CHUNK_SIZE + x), floor(chunk->z * CHUNK_SIZE + z)};
+    vec2i chunk_position = {floor(block_global_position[0] / CHUNK_SIZE), floor(block_global_position[1] / CHUNK_SIZE)};
+    vec2i block_local_position = {
+      (CHUNK_SIZE + (block_global_position[0] % CHUNK_SIZE)) % CHUNK_SIZE,
+      (CHUNK_SIZE + (block_global_position[1] % CHUNK_SIZE)) % CHUNK_SIZE
+    };
+
+    unsigned short access = block_index(block_local_position[0], y, block_local_position[1]);
+
+    for(unsigned short i = 0; i < chunk_count; i++){
+      struct chunk *other = chunks[i];
+      if(other->x == chunk_position[0] && other->z == chunk_position[1]){
+        return other->blocks[access];
+      }
+    }
+
     return 0;
   }
 

@@ -14,13 +14,10 @@
 #include "../main.h"
 #include "../camera.h"
 #include "../skybox.h"
-#include "../chunk.h"
 
-#define MAX_CHUNKS 4096
-#define CHUNK_CREATE_RADIUS 31
-#define CHUNK_RENDER_RADIUS 31
-#define CHUNK_DELETE_RADIUS 32
-#define CHUNK_MAX_GENERATED_PER_FRAME 32
+#define CHUNK_RENDER_RADIUS 16
+#define CHUNK_DELETE_RADIUS 18
+#define MAX_CHUNKS_GENERATED_PER_FRAME 32
 
 char* voxel_vertex_shader_source = ""
   #include "../shaders/voxel.vs"
@@ -30,11 +27,13 @@ char* voxel_fragment_shader_source = ""
   #include "../shaders/voxel.fs"
 ;
 
-unsigned int shader, texture, projection_location, view_location, camera_position_location, light_direction_location, light_intensity_location;
-Skybox skybox;
 struct chunk *chunks[MAX_CHUNKS];
 unsigned short chunk_count = 0;
-vec3 light_direction = {0.0f, 1.0f, 0.0f};
+unsigned char chunks_ready = 0;
+
+unsigned int shader, texture, projection_location, view_location, camera_position_location, light_direction_location, light_intensity_location;
+Skybox skybox;
+vec3 light_direction = {0.0f, 1.0f, 0.1f};
 float light_angle = 0.0f;
 
 unsigned char reloadPress = 0;
@@ -61,13 +60,9 @@ void ensure_chunks(int x, int z){
 
   unsigned short chunks_created = 0;
   for(char i = -CHUNK_CREATE_RADIUS; i <= CHUNK_CREATE_RADIUS; i++){
-    if(chunks_created >= CHUNK_MAX_GENERATED_PER_FRAME){
-      break;
-    }
-
     for(char j = -CHUNK_CREATE_RADIUS; j <= CHUNK_CREATE_RADIUS; j++){
-      if(chunks_created >= CHUNK_MAX_GENERATED_PER_FRAME){
-        break;
+      if(chunks_created >= MAX_CHUNKS_GENERATED_PER_FRAME){
+        return;
       }
 
       int a = x + i;
@@ -88,6 +83,10 @@ void ensure_chunks(int x, int z){
         chunks_created++;
       }
     }
+  }
+
+  if(chunks_created == 0){
+    chunks_ready = 1;
   }
 }
 
@@ -133,10 +132,11 @@ void voxel_state_update(float deltaTime){
     reloadPress = 1;
   }else if(reloadPress == 1 && glfwGetKey(cengine.window, GLFW_KEY_F11) == GLFW_RELEASE){
     reloadPress = 0;
-    printf("reloading...\n");
-    voxel_state_destroy();
-    voxel_state_init();
-    printf("done\n");
+    printf("%.6f %.6f\n", camera_position[0], camera_position[2]);
+    // printf("reloading...\n");
+    // voxel_state_destroy();
+    // voxel_state_init();
+    // printf("done\n");
   }
 
   light_angle += 10.0f * deltaTime;
@@ -174,7 +174,12 @@ void voxel_state_draw(){
   int z = floor(camera_position[2] / CHUNK_SIZE);
   ensure_chunks(x, z);
 
+  unsigned short chunks_generated = 0;
   for(unsigned short i = 0; i < chunk_count; i++){
+    if(chunks_ready == 0 || chunks_generated > MAX_CHUNKS_GENERATED_PER_FRAME){
+      break;
+    }
+
     struct chunk *chunk = chunks[i];
     int dx = x - chunk->x;
     int dz = z - chunk->z;
@@ -187,7 +192,7 @@ void voxel_state_draw(){
     glm_translate(model, (vec3){chunks[i]->x * CHUNK_SIZE, 0, chunks[i]->z * CHUNK_SIZE});
     shader_uniform_matrix4fv(shader, "model", model[0]);
 
-    chunk_draw(chunks[i]);
+    chunks_generated += chunk_draw(chunks[i]);
   }
 
   skybox_projection(projection[0]);
