@@ -16,7 +16,7 @@
 
 "void main(){\n"
 "  vPosition = vec3(model * vec4(coord.xyz, 1.0));\n"
-"  vBrightness = float(brightness) * 0.1 + 0.9;\n"
+"  vBrightness = float(brightness) * 0.1 + 1.0;\n"
 "  vNormal = mat3(transpose(inverse(model))) * normal;\n"
 "  vTexCoord = texCoord;\n"
 

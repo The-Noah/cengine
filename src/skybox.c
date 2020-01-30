@@ -12,7 +12,7 @@
 unsigned int skybox_shader, skybox_projection_location, skybox_view_location;
 
 #define DAY_COLOR (vec3){0.3f, 0.6f, 0.8f}
-#define SUNSET_COLOR (vec3){0.8f, 0.4f, 0.1f}
+#define SUNSET_COLOR (vec3){0.6f, 0.3f, 0.05f}
 
 const short skybox_vertices[] = {
    SKYBOX_SIZE,  SKYBOX_SIZE,  SKYBOX_SIZE,
