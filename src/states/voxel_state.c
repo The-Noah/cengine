@@ -15,15 +15,24 @@
 #include "../camera.h"
 #include "../skybox.h"
 
-#define CHUNK_RENDER_RADIUS 16
-#define CHUNK_DELETE_RADIUS 18
+#define CHUNK_RENDER_RADIUS 6
+#define CHUNK_DELETE_RADIUS 8
 #define MAX_CHUNKS_GENERATED_PER_FRAME 32
 
-char* voxel_vertex_shader_source = ""
+const static int8_t FACES[6][3] = {
+  { 1, 0, 0},
+  {-1, 0, 0},
+  { 0, 1, 0},
+  { 0,-1, 0},
+  { 0, 0, 1},
+  { 0, 0,-1}
+};
+
+const static char* voxel_vertex_shader_source = ""
   #include "../shaders/voxel.vs"
 ;
 
-char* voxel_fragment_shader_source = ""
+const static char* voxel_fragment_shader_source = ""
   #include "../shaders/voxel.fs"
 ;
 
@@ -90,6 +99,95 @@ void ensure_chunks(int x, int z){
   }
 }
 
+#if WALKING
+uint8_t get_block(int x, int y, int z){
+  vec2i chunk_position = {floor(x / CHUNK_SIZE), floor(z / CHUNK_SIZE)};
+  vec2i block_local_position = {
+    (CHUNK_SIZE + (x % CHUNK_SIZE)) % CHUNK_SIZE,
+    (CHUNK_SIZE + (x % CHUNK_SIZE)) % CHUNK_SIZE
+  };
+
+  unsigned short access = block_index(block_local_position[0], y, block_local_position[1]);
+
+  for(unsigned short i = 0; i < chunk_count; i++){
+    struct chunk *other = chunks[i];
+    if(other->x == chunk_position[0] && other->z == chunk_position[1]){
+      return other->blocks[access];
+    }
+  }
+}
+
+uint8_t _collide(uint8_t height, float *_x, float *_y, float *_z){
+  uint8_t result = 0;
+  float pad = 0.25f;
+  float x = *_x;
+  float y = *_y;
+  float z = *_z;
+  int nx = round(x);
+  int ny = round(y);
+  int nz = round(z);
+  float p[3] = {x, y, z};
+  int np[3] = {nx, ny, nz};
+
+  for(uint8_t face = 0; face < 6; face++){
+    for(uint8_t i = 0; i < 3; i++){
+      int8_t dir = FACES[face][i];
+      if(!dir){
+        continue;
+      }
+
+      float dist = (p[i] - np[i]) * dir;
+      if(dist < pad){
+        continue;
+      }
+
+      for(uint8_t dy = 0; dy < height; dy++){
+        int op[3] = {nx, ny - dy, nz};
+        op[i] += dir;
+
+        if(!get_block(op[0], op[1], op[2])){
+          continue;
+        }
+
+        p[i] -= (dist - pad) * dir;
+
+        if(i == 1){
+          result = 1;
+        }
+
+        break;
+      }
+    }
+  }
+
+  *_x = p[0];
+  *_y = p[1];
+  *_z = p[2];
+  return result;
+}
+
+uint8_t collide(float *x, float *y, float *z){
+  int px = round(*x) / CHUNK_SIZE;
+  int pz = round(*z) / CHUNK_SIZE;
+
+  for(unsigned short i = 0; i < chunk_count; i++){
+    struct chunk *chunk = chunks[i];
+    int dx = chunk->x - px;
+    int dz = chunk->z - pz;
+
+    if(abs(dx) > 1 || abs(dz) > 1){
+      continue;
+    }
+
+    if(_collide(2, x, y, z)){
+      return 1;
+    }
+  }
+
+  return 0;
+}
+#endif
+
 void voxel_state_init(){
   printf("voxel state init\n");
 
@@ -143,6 +241,13 @@ void voxel_state_update(float deltaTime){
   double light_angle_rad = glm_rad(light_angle);
   light_direction[0] = (float)sin(light_angle_rad);
   light_direction[1] = (float)cos(light_angle_rad);
+
+  camera_update();
+#if WALKING
+  if(collide(&camera_position[0], &camera_position[1], &camera_position[2])){
+    camera_dy = 0.0f;
+  }
+#endif
 }
 
 void voxel_state_draw(){

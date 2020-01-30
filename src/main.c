@@ -42,7 +42,15 @@ void processInput(GLFWwindow *window){
     return;
   }
 
-  const float camera_speed = 25.0f * deltaTime;
+#if WALKING
+  const float camera_speed = 10.0f * deltaTime;
+#else
+  float camera_speed = 25.0f * deltaTime;
+  if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)){
+    camera_speed *= 5.0f;
+  }
+#endif
+
   if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
     camera_move_forward(camera_speed);
   }
@@ -86,7 +94,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos){
     camera_pitch = -89.0f;
   }
 
-  camera_update_rotation();
+  // camera_update_rotation();
 }
 
 int main(){

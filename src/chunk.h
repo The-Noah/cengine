@@ -25,6 +25,7 @@ struct chunk{
   int z;
 };
 
+unsigned short block_index(uint8_t x, uint8_t y, uint8_t z);
 struct chunk* chunk_init(int x, int z);
 void chunk_free(struct chunk *chunk);
 unsigned char chunk_draw(struct chunk *chunk);

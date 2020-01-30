@@ -4,7 +4,7 @@
 #include "../chunk.h"
 
 #define MAX_CHUNKS 4096
-#define CHUNK_CREATE_RADIUS 17
+#define CHUNK_CREATE_RADIUS 7
 
 struct chunk *chunks[MAX_CHUNKS];
 unsigned short chunk_count;

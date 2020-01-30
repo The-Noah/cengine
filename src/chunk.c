@@ -8,8 +8,7 @@
 
 #include "renderer/utils.h"
 #include "noise.h"
-
-#define MAX(a, b) ((a) >= (b)) ? (a) : (b)
+#include "main.h"
 
 void byte4_set(GLbyte x, GLbyte y, GLbyte z, GLbyte w, byte4 dest){
   dest[0] = x;
