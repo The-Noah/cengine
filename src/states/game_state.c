@@ -17,7 +17,6 @@
 #include "../main.h"
 #include "../skybox.h"
 #include "../cengine.h"
-#include "../models.h"
 
 #define MODEL_NUMBER PLANE
 
@@ -74,10 +73,10 @@ char* read_file(const char* path){
 void game_state_init(){
   printf("game state init\n");
 
-  plane = drawable_create(&models[PLANE]);
-  object = drawable_create(&models[SPAWN_BEACON]);
-  light = drawable_create(&models[SPHERE]);
-  cube = drawable_create(&models[CUBE]);
+  // plane = drawable_create(&models[PLANE]);
+  // object = drawable_create(&models[SPAWN_BEACON]);
+  // light = drawable_create(&models[SPHERE]);
+  // cube = drawable_create(&models[CUBE]);
 
 #ifdef DEBUG
   if(access("shaders/standard.vs", F_OK) != -1){

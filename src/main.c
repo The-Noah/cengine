@@ -8,7 +8,6 @@
 
 #include "cengine.h"
 #include "camera.h"
-#include "states/game_state.h"
 #include "states/menu_state.h"
 #include "states/voxel_state.h"
 
@@ -114,12 +113,6 @@ int main(){
   menu_state.update = menu_state_update;
   menu_state.draw = menu_state_draw;
   state_manager_push(&cengine.state_manager, &menu_state);
-
-  State game_state;
-  game_state.init = game_state_init;
-  game_state.destroy = game_state_destroy;
-  game_state.update = game_state_update;
-  game_state.draw = game_state_draw;
 
   voxel_state.init = voxel_state_init;
   voxel_state.destroy = voxel_state_destroy;
