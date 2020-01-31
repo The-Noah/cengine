@@ -4,6 +4,10 @@
 #include <string.h>
 #include <pthread.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #define CGLM_ALL_UNALIGNED
 #include <cglm/cglm.h>
 #include <cglm/struct.h>
@@ -49,6 +53,12 @@ pthread_t chunk_update_thread_id;
 
 unsigned char reloadPress = 0;
 
+uint8_t current_block = 1;
+
+float dti(float val){
+  return fabsf(val - roundf(val));
+}
+
 void* chunk_update_thread(){
   while(running){
     unsigned short chunk_meshes_generated = 0;
@@ -59,6 +69,12 @@ void* chunk_update_thread(){
 
       chunk_meshes_generated += chunk_update(chunks[i]);
     }
+
+#ifdef _WIN32
+    Sleep(0);
+#else
+    sleep(0);
+#endif
   }
 
   return NULL;
@@ -262,7 +278,9 @@ void voxel_state_update(float deltaTime){
   }
 #endif
 
-  if(glfwGetMouseButton(cengine.window, GLFW_MOUSE_BUTTON_LEFT)){
+  unsigned char left_mouse = glfwGetMouseButton(cengine.window, GLFW_MOUSE_BUTTON_LEFT);
+  unsigned char right_mouse = glfwGetMouseButton(cengine.window, GLFW_MOUSE_BUTTON_RIGHT);
+  if(left_mouse || right_mouse){
     float depth;
     glReadPixels(cengine.width / 2, cengine.height / 2, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
 
@@ -277,12 +295,46 @@ void voxel_state_update(float deltaTime){
     int y = floorf(block_coord[1]);
     int z = floorf(block_coord[2]);
 
+    if(right_mouse){
+      vec3 lookat;
+      glm_vec3_copy(block_coord, lookat);
+      if(dti(block_coord[0]) < dti(block_coord[1])){
+        if(dti(block_coord[0]) < dti(block_coord[2])){
+          if(lookat[0] > 0){
+            x--;
+          }else{
+            x++;
+          }
+        }else{
+          if(lookat[2] > 0){
+            z--;
+          }else{
+            z++;
+          }
+        }
+      }else{
+        if(dti(block_coord[1]) < dti(block_coord[2])){
+          if(lookat[1] > 0){
+            y--;
+          }else{
+            y++;
+          }
+        }else{
+          if(lookat[2] > 0){
+            z--;
+          }else{
+            z++;
+          }
+        }
+      }
+    }
+
     int cx = floor(x / CHUNK_SIZE);
     int cz = floor(z / CHUNK_SIZE);
     for(unsigned short i = 0; i < chunk_count; i++){
       struct chunk* other = chunks[i];
       if(other->x == cx && other->z == cz){
-        chunk_set(other, x % CHUNK_SIZE, y, z % CHUNK_SIZE, 0);
+        chunk_set(other, x % CHUNK_SIZE, y, z % CHUNK_SIZE, left_mouse ? 0 : current_block);
         break;
       }
     }
@@ -344,5 +396,13 @@ void voxel_state_on_key(GLFWwindow* window, int key, int scancode, int action, i
       texture_delete(&texture);
       texture = texture_create("tiles.png", GL_NEAREST);
     }
+  }
+
+  if(key >= '1' && key <= '6'){
+    current_block = key - '1' + 1;
+  }
+
+  if(key == GLFW_KEY_E){
+    current_block = current_block % 6 + 1;
   }
 }

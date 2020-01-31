@@ -399,7 +399,8 @@ uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
 
 void chunk_set(struct chunk *chunk, int x, int y, int z, uint8_t block){
   unsigned short access = block_index(x, y, z);
-  if(chunk->blocks[access] == 4){
+  uint8_t _block = chunk->blocks[access];
+  if(_block == 4 || _block == block){
     return;
   }
 
