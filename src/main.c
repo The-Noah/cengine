@@ -47,7 +47,7 @@ void processInput(GLFWwindow *window){
 #else
   float camera_speed = 25.0f * deltaTime;
   if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)){
-    camera_speed *= 5.0f;
+    camera_speed *= 10.0f;
   }
 #endif
 
@@ -138,7 +138,7 @@ int main(){
     lastTime = currentTime;
     frames++;
     if(currentTime - lastPrintTime >= 1.0){
-      printf("%fms (%dfps)\n", 1000.0/(double)frames, frames);
+      printf("%.1fms (%dfps)\n", 1000.0/(double)frames, frames);
       frames = 0;
       lastPrintTime += 1.0;
     }

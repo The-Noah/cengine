@@ -10,6 +10,7 @@ project "cengine"
   includedirs "include/"
   staticruntime "On"
   flags {"LinkTimeOptimization"}
+  links {"pthread"}
 
   disablewarnings {"trigraphs"}
 

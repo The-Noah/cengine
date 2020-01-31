@@ -1,6 +1,7 @@
 #include "voxel_state.h"
 
 #include <stdio.h>
+#include <pthread.h>
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -15,9 +16,9 @@
 #include "../camera.h"
 #include "../skybox.h"
 
-#define CHUNK_RENDER_RADIUS 6
-#define CHUNK_DELETE_RADIUS 8
-#define MAX_CHUNKS_GENERATED_PER_FRAME 4
+#define CHUNK_RENDER_RADIUS 16
+#define CHUNK_DELETE_RADIUS 18
+#define MAX_CHUNKS_GENERATED_PER_FRAME 32
 
 const static int8_t FACES[6][3] = {
   { 1, 0, 0},
@@ -38,14 +39,31 @@ const static char* voxel_fragment_shader_source = ""
 
 struct chunk *chunks[MAX_CHUNKS];
 unsigned short chunk_count = 0;
-unsigned char chunks_ready = 0;
+unsigned char running = 1;
 
 unsigned int shader, texture, projection_location, view_location, camera_position_location, light_direction_location, light_intensity_location;
 Skybox skybox;
 vec3 light_direction = {0.0f, 1.0f, 0.1f};
 float light_angle = 0.0f;
 
+pthread_t chunk_update_thread_id;
+
 unsigned char reloadPress = 0;
+
+void* chunk_update_thread(){
+  while(running){
+    unsigned short chunk_meshes_generated = 0;
+    for(unsigned short i = 0; i < chunk_count; i++){
+      if(chunk_meshes_generated >= MAX_CHUNKS_GENERATED_PER_FRAME){
+        break;
+      }
+
+      chunk_meshes_generated += chunk_update(chunks[i]);
+    }
+  }
+
+  return NULL;
+}
 
 void ensure_chunks(int x, int z){
   for(unsigned short i = 0; i < chunk_count; i++){
@@ -61,13 +79,22 @@ void ensure_chunks(int x, int z){
       chunk->vao = other->vao;
       chunk->elements = other->elements;
       chunk->changed = other->changed;
+      chunk->mesh_changed = other->mesh_changed;
       chunk->x = other->x;
       chunk->z = other->z;
+      chunk->vertex = other->vertex;
+      chunk->brightness = other->brightness;
+      chunk->normal = other->normal;
+      chunk->texCoords = other->texCoords;
+      chunk->px = other->px;
+      chunk->nx = other->nx;
+      chunk->pz = other->pz;
+      chunk->nz = other->nz;
+
       chunk_count--;
     }
   }
 
-  unsigned short chunks_created = 0;
   for(char i = -CHUNK_CREATE_RADIUS; i <= CHUNK_CREATE_RADIUS; i++){
     for(char j = -CHUNK_CREATE_RADIUS; j <= CHUNK_CREATE_RADIUS; j++){
       int a = x + i;
@@ -85,13 +112,8 @@ void ensure_chunks(int x, int z){
       if(create){
         struct chunk *chunk = chunk_init(a, b);
         chunks[chunk_count++] = chunk;
-        chunks_created++;
       }
     }
-  }
-
-  if(chunks_created == 0){
-    chunks_ready = 1;
   }
 }
 
@@ -202,6 +224,10 @@ void voxel_state_init(){
   skybox_init();
   skybox_create(&skybox);
 
+  if(pthread_create(&chunk_update_thread_id, NULL, &chunk_update_thread, NULL)){
+    fprintf(stderr, "failed to create chunk mesh thread\n");
+  }
+
   glfwSetInputMode(cengine.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
@@ -217,6 +243,9 @@ void voxel_state_destroy(){
 
   texture_delete(&texture);
   shader_delete(shader);
+
+  running = 0;
+  pthread_join(chunk_update_thread_id, NULL);
 
   glfwSetInputMode(cengine.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
@@ -275,25 +304,18 @@ void voxel_state_draw(){
   int z = floor(camera_position[2] / CHUNK_SIZE);
   ensure_chunks(x, z);
 
-  unsigned short chunk_meshes_generated = 0;
   for(unsigned short i = 0; i < chunk_count; i++){
-    if(chunks_ready == 1 && chunk_meshes_generated < MAX_CHUNKS_GENERATED_PER_FRAME){
-      chunk_meshes_generated += chunk_update(chunks[i]);
-    }
-
     struct chunk *chunk = chunks[i];
-    int dx = x - chunk->x;
-    int dz = z - chunk->z;
 
-    if(abs(dx) > CHUNK_RENDER_RADIUS || abs(dz) > CHUNK_RENDER_RADIUS){
+    if(!chunk->elements || abs(x - chunk->x) > CHUNK_RENDER_RADIUS || abs(z - chunk->z) > CHUNK_RENDER_RADIUS){
       continue;
     }
 
     mat4 model = GLMS_MAT4_IDENTITY_INIT;
-    glm_translate(model, (vec3){chunks[i]->x * CHUNK_SIZE, 0, chunks[i]->z * CHUNK_SIZE});
+    glm_translate(model, (vec3){chunk->x * CHUNK_SIZE, 0, chunk->z * CHUNK_SIZE});
     shader_uniform_matrix4fv(shader, "model", model[0]);
 
-    chunk_draw(chunks[i]);
+    chunk_draw(chunk);
   }
 
   skybox_projection(projection[0]);
