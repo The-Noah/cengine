@@ -4,9 +4,6 @@
 #include <string.h>
 #include <pthread.h>
 
-#define GLEW_STATIC
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
 #define CGLM_ALL_UNALIGNED
 #include <cglm/cglm.h>
 #include <cglm/struct.h>
@@ -310,4 +307,16 @@ void voxel_state_draw(){
 
   skybox_projection(projection[0]);
   skybox_draw(&skybox);
+}
+
+void voxel_state_on_key(GLFWwindow* window, int key, int scancode, int action, int mods){
+  int control = mods & (GLFW_MOD_CONTROL | GLFW_MOD_SUPER);
+  if(control && key == GLFW_KEY_V){
+    const char* buffer = glfwGetClipboardString(window);
+
+    if(strstr(buffer, "/reload") == buffer){
+      texture_delete(&texture);
+      texture = texture_create("tiles.png", GL_NEAREST);
+    }
+  }
 }

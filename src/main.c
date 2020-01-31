@@ -96,11 +96,15 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos){
   // camera_update_rotation();
 }
 
+void on_key(GLFWwindow* window, int key, int scancode, int action, int mods){
+  state_manager_top(&cengine.state_manager)->on_key(window, key, scancode, action, mods);
+}
+
 int main(){
   printf("starting\n");
 
   struct CEngineOptions options = {0};
-  int init_status = cengine_init(&cengine, &options);
+  int init_status = cengine_init(&cengine, &options, on_key);
   if(init_status < 0){
     return init_status;
   }
@@ -118,6 +122,7 @@ int main(){
   voxel_state.destroy = voxel_state_destroy;
   voxel_state.update = voxel_state_update;
   voxel_state.draw = voxel_state_draw;
+  voxel_state.on_key = voxel_state_on_key;
 
   camera_init();
 

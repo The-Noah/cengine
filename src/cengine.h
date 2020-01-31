@@ -25,7 +25,7 @@ typedef struct{
   StateManager state_manager;
 } CEngine;
 
-int cengine_init(CEngine *cengine, struct CEngineOptions *options);
+int cengine_init(CEngine *cengine, struct CEngineOptions *options, GLFWkeyfun on_key);
 void cengine_update(CEngine *cengine);
 void cengine_free(CEngine *cengine);
 

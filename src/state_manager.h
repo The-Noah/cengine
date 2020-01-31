@@ -1,6 +1,10 @@
 #ifndef STATE_MANAGER_H
 #define STATE_MANAGER_H
 
+#define GLEW_STATIC
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+
 typedef void (*fnPtr)();
 typedef void (*fnPtrFl)(float);
 
@@ -9,6 +13,7 @@ typedef struct{
   fnPtr destroy;
   fnPtrFl update;
   fnPtr draw;
+  GLFWkeyfun on_key;
 } State;
 
 typedef struct{

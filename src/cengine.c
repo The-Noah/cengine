@@ -14,7 +14,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height){
   cengine.height = height;
 }
 
-int cengine_init(CEngine *cengine, struct CEngineOptions *options){
+int cengine_init(CEngine *cengine, struct CEngineOptions *options, GLFWkeyfun on_key){
   if(glfwInit() != GLFW_TRUE){
     fprintf(stderr, "failed to init glfw\n");
     return -1;
@@ -52,8 +52,9 @@ int cengine_init(CEngine *cengine, struct CEngineOptions *options){
 
   glfwMakeContextCurrent(cengine->window);
   glfwSetFramebufferSizeCallback(cengine->window, framebuffer_size_callback);
+  glfwSetKeyCallback(cengine->window, on_key);
 
-  glViewport(0, 0, 800, 600);
+  glViewport(0, 0, cengine->width, cengine->height);
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
   glEnable(GL_CULL_FACE);
@@ -61,7 +62,7 @@ int cengine_init(CEngine *cengine, struct CEngineOptions *options){
   glEnable(GL_TEXTURE_2D);
   glEnable(GL_MULTISAMPLE);
   glEnable(GL_FRAMEBUFFER_SRGB);
-  glClearColor(0.3f, 0.6f, 0.8f, 1.0f);
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
   glewExperimental = GL_TRUE;
   GLenum err = glewInit();
