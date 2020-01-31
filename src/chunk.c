@@ -88,13 +88,13 @@ struct chunk* chunk_init(int x, int z){
       int cx = chunk->x * CHUNK_SIZE + dx;
       int cz = chunk->z * CHUNK_SIZE + dz;
 
-      float f = simplex2(cx * 0.01f, cz * 0.01f, 4, 0.5f, 2.0f);
+      float f = simplex2(cx * 0.01f, cz * 0.01f, 4, 0.7f, 2.0f);
       int h = (f + 1) / 2 * (CHUNK_SIZE - 1) + 1;
 
       for(uint8_t dy = 0; dy < CHUNK_SIZE; dy++){
         uint8_t thickness = h - dy;
         uint8_t block = dy < 9 && thickness <= 3 ? 5 : thickness == 1 ? 1 : thickness <= 3 ? 3 : 2;
-        chunk->blocks[block_index(dx, dy, dz)] = dy < h ? dy == 0 ? 4 : dy >= CHUNK_SIZE - 6 ? 6 : block : 0;
+        chunk->blocks[block_index(dx, dy, dz)] = dy < h ? dy == 0 ? 4 : block : 0;
         if(dy < h){
           count++;
         }
@@ -400,6 +400,7 @@ uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
 void chunk_set(struct chunk *chunk, int x, int y, int z, uint8_t block){
   unsigned short access = block_index(x, y, z);
   uint8_t _block = chunk->blocks[access];
+  printf("trying to set block %d %d from %d to %d\n", x, z, _block, block);
   if(_block == 4 || _block == block){
     return;
   }
