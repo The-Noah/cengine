@@ -12,6 +12,9 @@
 #include "renderer/utils.h"
 #include "noise.h"
 #include "main.h"
+#include "blocks.h"
+
+#define TEXTURE_SIZE 4
 
 void byte4_set(GLbyte x, GLbyte y, GLbyte z, GLbyte w, byte4 dest){
   dest[0] = x;
@@ -125,10 +128,10 @@ unsigned char chunk_update(struct chunk *chunk){
   unsigned int j = 0;
   unsigned int texCoord = 0;
 
-  float s = 0.25f;
+  float s = 1.0f / TEXTURE_SIZE;
   float du, dv;
-  float a = 0.0f;
-  float b = s;
+  float a = 0.0f + 1.0f / 1024.0f;
+  float b = s - 1.0f / 1024.0f;
 
   for(uint8_t y = 0; y < CHUNK_SIZE; y++){
     for(uint8_t x = 0; x < CHUNK_SIZE; x++){
@@ -139,11 +142,12 @@ unsigned char chunk_update(struct chunk *chunk){
           continue;
         }
 
-        uint8_t w = block - 1;
+        uint8_t w;
 
         // -x
         if(chunk_get(chunk, x - 1, y, z) == 0){
-          du = w * s; dv = s;
+          w = blocks[block][0];
+          du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
 
           byte4_set(x, y, z, block, chunk->vertex[i++]);
           byte4_set(x, y + 1, z + 1, block, chunk->vertex[i++]);
@@ -167,7 +171,8 @@ unsigned char chunk_update(struct chunk *chunk){
 
         // +x
         if(chunk_get(chunk, x + 1, y, z) == 0){
-          du = w * s; dv = s;
+          w = blocks[block][1];
+          du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
 
           byte4_set(x + 1, y, z, block, chunk->vertex[i++]);
           byte4_set(x + 1, y + 1, z + 1, block, chunk->vertex[i++]);
@@ -191,7 +196,8 @@ unsigned char chunk_update(struct chunk *chunk){
 
         // -z
         if(chunk_get(chunk, x, y, z - 1) == 0){
-          du = w * s ; dv = s;
+          w = blocks[block][4];
+          du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
 
           byte4_set(x, y, z, block, chunk->vertex[i++]);
           byte4_set(x + 1, y + 1, z, block, chunk->vertex[i++]);
@@ -215,7 +221,8 @@ unsigned char chunk_update(struct chunk *chunk){
 
         // +z
         if(chunk_get(chunk, x, y, z + 1) == 0){
-          du = w * s ; dv = s;
+          w = blocks[block][5];
+          du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
 
           byte4_set(x, y, z + 1, block, chunk->vertex[i++]);
           byte4_set(x + 1, y, z + 1, block, chunk->vertex[i++]);
@@ -239,7 +246,8 @@ unsigned char chunk_update(struct chunk *chunk){
 
         // -y
         if(chunk_get(chunk, x, y - 1, z) == 0){
-          du = w * s; dv = 0.0f;
+          w = blocks[block][3];
+          du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
 
           byte4_set(x, y, z, block, chunk->vertex[i++]);
           byte4_set(x + 1, y, z, block, chunk->vertex[i++]);
@@ -263,7 +271,8 @@ unsigned char chunk_update(struct chunk *chunk){
 
         // +y
         if(chunk_get(chunk, x, y + 1, z) == 0){
-          du = w * s; dv = s + s;
+          w = blocks[block][2];
+          du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
 
           byte4_set(x, y + 1, z, block, chunk->vertex[i++]);
           byte4_set(x, y + 1, z + 1, block, chunk->vertex[i++]);

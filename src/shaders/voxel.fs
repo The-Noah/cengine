@@ -22,6 +22,10 @@
 
 "void main(){\n"
 "  vec3 color = texture(diffuse_texture, vTexCoord).rgb;\n"
+"  if(color == vec3(1.0, 0.0, 1.0)){\n"
+"    discard;\n"
+"  }\n"
+
 "  vec3 normal = normalize(vNormal);"
 
 "  float sun = calcLight(vPosition, normalize(light_direction), normal);\n"

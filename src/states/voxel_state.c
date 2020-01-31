@@ -1,6 +1,7 @@
 #include "voxel_state.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <pthread.h>
 
 #define GLEW_STATIC
@@ -74,24 +75,8 @@ void ensure_chunks(int x, int z){
     if(abs(dx) >= CHUNK_DELETE_RADIUS || abs(dz) >= CHUNK_DELETE_RADIUS){
       chunk_free(chunk);
 
-      struct chunk *other = chunks[chunk_count - 1];
-      chunk->blocks = other->blocks;
-      chunk->vao = other->vao;
-      chunk->elements = other->elements;
-      chunk->changed = other->changed;
-      chunk->mesh_changed = other->mesh_changed;
-      chunk->x = other->x;
-      chunk->z = other->z;
-      chunk->vertex = other->vertex;
-      chunk->brightness = other->brightness;
-      chunk->normal = other->normal;
-      chunk->texCoords = other->texCoords;
-      chunk->px = other->px;
-      chunk->nx = other->nx;
-      chunk->pz = other->pz;
-      chunk->nz = other->nz;
-
-      chunk_count--;
+      struct chunk *other = chunks[--chunk_count];
+      memcpy(chunk, other, sizeof(struct chunk));
     }
   }
 
@@ -110,6 +95,11 @@ void ensure_chunks(int x, int z){
       }
 
       if(create){
+        if(chunk_count >= MAX_CHUNKS){
+          printf("reached max number of chunks\n");
+          return;
+        }
+
         struct chunk *chunk = chunk_init(a, b);
         chunks[chunk_count++] = chunk;
       }
