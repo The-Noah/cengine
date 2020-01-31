@@ -43,6 +43,7 @@ unsigned int shader, texture, projection_location, view_location, camera_positio
 Skybox skybox;
 vec3 light_direction = {0.0f, 1.0f, 0.1f};
 float light_angle = 0.0f;
+mat4 projection = GLMS_MAT4_IDENTITY_INIT;
 
 pthread_t chunk_update_thread_id;
 
@@ -260,6 +261,32 @@ void voxel_state_update(float deltaTime){
     camera_dy = 0.0f;
   }
 #endif
+
+  if(glfwGetMouseButton(cengine.window, GLFW_MOUSE_BUTTON_LEFT)){
+    float depth;
+    glReadPixels(cengine.width / 2, cengine.height / 2, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
+
+    vec4 viewport = {0.0f, 0.0f, (float)cengine.width, (float)cengine.height};
+    vec3 win_coord = {(float)cengine.width / 2.0f, (float)cengine.height / 2.0f, depth};
+    mat4 proj;
+    glm_mat4_mul(projection, view, proj);
+    vec3 block_coord;
+    glm_unproject(win_coord, proj, viewport, block_coord);
+
+    int x = floorf(block_coord[0]);
+    int y = floorf(block_coord[1]);
+    int z = floorf(block_coord[2]);
+
+    int cx = floor(x / CHUNK_SIZE);
+    int cz = floor(z / CHUNK_SIZE);
+    for(unsigned short i = 0; i < chunk_count; i++){
+      struct chunk* other = chunks[i];
+      if(other->x == cx && other->z == cz){
+        chunk_set(other, x % CHUNK_SIZE, y, z % CHUNK_SIZE, 0);
+        break;
+      }
+    }
+  }
 }
 
 void voxel_state_draw(){
@@ -280,7 +307,6 @@ void voxel_state_draw(){
   glUniform3fv(light_direction_location, 1, light_direction);
   glUniform1f(light_intensity_location, light_intensity);
 
-  mat4 projection = GLMS_MAT4_IDENTITY_INIT;
   glm_perspective(glm_rad(65.0f), (float)cengine.width/(float)cengine.height, 0.1f, SKYBOX_SIZE * 2.0f, projection);
   shader_uniform_matrix4fv_at(projection_location, projection[0]);
 

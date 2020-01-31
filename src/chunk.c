@@ -398,6 +398,21 @@ uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
 }
 
 void chunk_set(struct chunk *chunk, int x, int y, int z, uint8_t block){
-  chunk->blocks[block_index(x, y, z)] = block;
+  unsigned short access = block_index(x, y, z);
+  if(chunk->blocks[access] == 4){
+    return;
+  }
+
+  chunk->blocks[access] = block;
   chunk->changed = 1;
+
+  if(x == 0 && chunk->nx != NULL){
+    chunk->nx->changed = 1;
+  }else if(x == CHUNK_SIZE - 1 && chunk->px != NULL){
+    chunk->px->changed = 1;
+  }else if(z == 0 && chunk->nz != NULL){
+    chunk->nz->changed = 1;
+  }else if(z == CHUNK_SIZE - 1 && chunk->pz != NULL){
+    chunk->pz->changed = 1;
+  }
 }
