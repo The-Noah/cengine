@@ -29,6 +29,16 @@ void byte3_set(GLbyte x, GLbyte y, GLbyte z, byte3 dest){
   dest[2] = z;
 }
 
+unsigned char is_transparent(uint8_t block){
+  switch(block){
+    case 0:
+    case 6:
+      return 1;
+    default:
+      return 0;
+  }
+}
+
 void chunk_get_neighbors(struct chunk *chunk){
   if(chunk->px != NULL && chunk->nx != NULL && chunk->pz != NULL && chunk->nz != NULL){
     return;
@@ -84,7 +94,7 @@ struct chunk* chunk_init(int x, int z){
       for(uint8_t dy = 0; dy < CHUNK_SIZE; dy++){
         uint8_t thickness = h - dy;
         uint8_t block = dy < 9 && thickness <= 3 ? 5 : thickness == 1 ? 1 : thickness <= 3 ? 3 : 2;
-        chunk->blocks[block_index(dx, dy, dz)] = dy < h ? dy == 0 ? 4 : block : 0;
+        chunk->blocks[block_index(dx, dy, dz)] = dy < h ? dy == 0 ? 4 : dy >= CHUNK_SIZE - 6 ? 6 : block : 0;
         if(dy < h){
           count++;
         }
@@ -145,7 +155,7 @@ unsigned char chunk_update(struct chunk *chunk){
         uint8_t w;
 
         // -x
-        if(chunk_get(chunk, x - 1, y, z) == 0){
+        if(is_transparent(chunk_get(chunk, x - 1, y, z))){
           w = blocks[block][0];
           du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
 
@@ -170,7 +180,7 @@ unsigned char chunk_update(struct chunk *chunk){
         }
 
         // +x
-        if(chunk_get(chunk, x + 1, y, z) == 0){
+        if(is_transparent(chunk_get(chunk, x + 1, y, z))){
           w = blocks[block][1];
           du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
 
@@ -195,7 +205,7 @@ unsigned char chunk_update(struct chunk *chunk){
         }
 
         // -z
-        if(chunk_get(chunk, x, y, z - 1) == 0){
+        if(is_transparent(chunk_get(chunk, x, y, z - 1))){
           w = blocks[block][4];
           du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
 
@@ -220,7 +230,7 @@ unsigned char chunk_update(struct chunk *chunk){
         }
 
         // +z
-        if(chunk_get(chunk, x, y, z + 1) == 0){
+        if(is_transparent(chunk_get(chunk, x, y, z + 1))){
           w = blocks[block][5];
           du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
 
@@ -245,7 +255,7 @@ unsigned char chunk_update(struct chunk *chunk){
         }
 
         // -y
-        if(chunk_get(chunk, x, y - 1, z) == 0){
+        if(is_transparent(chunk_get(chunk, x, y - 1, z))){
           w = blocks[block][3];
           du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
 
@@ -270,7 +280,7 @@ unsigned char chunk_update(struct chunk *chunk){
         }
 
         // +y
-        if(chunk_get(chunk, x, y + 1, z) == 0){
+        if(is_transparent(chunk_get(chunk, x, y + 1, z))){
           w = blocks[block][2];
           du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
 
