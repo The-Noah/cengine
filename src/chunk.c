@@ -83,7 +83,7 @@ struct chunk* chunk_init(int x, int z){
 
       for(uint8_t dy = 0; dy < CHUNK_SIZE; dy++){
         uint8_t thickness = h - dy;
-        uint8_t block = thickness == 1 ? 1 : thickness <= 3 ? 3 : 2;
+        uint8_t block = dy < 9 && thickness <= 3 ? 5 : thickness == 1 ? 1 : thickness <= 3 ? 3 : 2;
         chunk->blocks[block_index(dx, dy, dz)] = dy < h ? dy == 0 ? 4 : block : 0;
         if(dy < h){
           count++;
