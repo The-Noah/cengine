@@ -59,6 +59,78 @@ float dti(float val){
   return fabsf(val - roundf(val));
 }
 
+void get_sight_vector(float rx, float ry, float *vx, float *vy, float *vz){
+  float m = cosf(ry);
+  *vx = cosf(rx - glm_rad(90.0f)) * m;
+  *vy = sinf(ry);
+  *vz = sinf(rx - glm_rad(90.0f)) * m;
+}
+
+int _hit_test(uint8_t *blocks, float max_distance, float x, float y, float z, float vx, float vy, float vz, int *hx, int *hy, int *hz){
+  uint8_t m = 8;
+  int px = 0;
+  int py = 0;
+  int pz = 0;
+
+  for(unsigned short i = 0; i < max_distance * m; i++){
+    int nx = round(x);
+    int ny = round(y);
+    int nz = round(z);
+
+    if(nx != px || ny != py || nz != pz){
+      if(blocks[block_index(nx % CHUNK_SIZE, ny, nz % CHUNK_SIZE)]){
+        printf("hit block %d at %d %d\n", blocks[block_index(nx % CHUNK_SIZE, ny, nz % CHUNK_SIZE)], nx % CHUNK_SIZE, nz % CHUNK_SIZE);
+        *hx = nx;
+        *hy = ny;
+        *hz = nz;
+
+        return 1;
+      }
+    }
+
+    x += vx / m;
+    y += vy / m;
+    z += vz / m;
+  }
+
+  return 0;
+}
+
+int hit_test(float x, float y, float z, float rx, float ry, int *bx, int *by, int *bz){
+  int result = 0;
+  float best = 0.0f;
+
+  int cx = round(x) / CHUNK_SIZE;
+  int cz = round(z) / CHUNK_SIZE;
+
+  float vx, vy, vz;
+  get_sight_vector(rx, ry, &vx, &vy, &vz);
+
+  for(unsigned short i = 0; i < chunk_count; i++){
+    struct chunk *chunk = chunks[i];
+    int dx = chunk->x - cx;
+    int dz = chunk->z - cz;
+    if(abs(dx) > 1 || abs(dz) > 1){
+      continue;
+    }
+
+    int hx, hy, hz;
+    if(_hit_test(chunk->blocks, 4.0f, x, y, z, vx, vy, vz, &hx, &hy, &hz)){
+      float d = sqrtf(powf(hx - x, 2.0f) + powf(hy - y, 2.0f) + powf(hz - z, 2.0f));
+      if(best == 0 || d < best){
+        best = d;
+        *bx = hx;
+        *by = hy;
+        *bz = hz;
+      }
+
+      result = 1;
+    }
+  }
+
+  return result;
+}
+
 void* chunk_update_thread(){
   while(running){
     unsigned short chunk_meshes_generated = 0;
@@ -280,62 +352,19 @@ void voxel_state_update(float deltaTime){
 
   unsigned char left_mouse = glfwGetMouseButton(cengine.window, GLFW_MOUSE_BUTTON_LEFT);
   unsigned char right_mouse = glfwGetMouseButton(cengine.window, GLFW_MOUSE_BUTTON_RIGHT);
+  
   if(left_mouse || right_mouse){
-    float depth;
-    glReadPixels(cengine.width / 2, cengine.height / 2, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
+    int hx, hy, hz;
+    if(hit_test(camera_position[0], camera_position[1], camera_position[2], camera_pitch, camera_yaw, &hx, &hy, &hz)){
+      int cx = hx / CHUNK_SIZE;
+      int cz = hz / CHUNK_SIZE;
 
-    vec4 viewport = {0.0f, 0.0f, (float)cengine.width, (float)cengine.height};
-    vec3 win_coord = {(float)cengine.width / 2.0f, (float)cengine.height / 2.0f, depth};
-    mat4 proj;
-    glm_mat4_mul(projection, view, proj);
-    vec3 block_coord;
-    glm_unproject(win_coord, proj, viewport, block_coord);
-
-    int x = floorf(block_coord[0]);
-    int y = floorf(block_coord[1]);
-    int z = floorf(block_coord[2]);
-
-    if(right_mouse){
-      vec3 lookat;
-      glm_vec3_copy(block_coord, lookat);
-      if(dti(block_coord[0]) < dti(block_coord[1])){
-        if(dti(block_coord[0]) < dti(block_coord[2])){
-          if(lookat[0] > 0){
-            x--;
-          }else{
-            x++;
-          }
-        }else{
-          if(lookat[2] > 0){
-            z--;
-          }else{
-            z++;
-          }
+      for(unsigned short i = 0; i < chunk_count; i++){
+        struct chunk *chunk = chunks[i];
+        if(chunk->x == cx && chunk->z == cz){
+          chunk_set(chunk, hx % CHUNK_SIZE, hy, hz % CHUNK_SIZE, left_mouse ? 0 : current_block);
+          break;
         }
-      }else{
-        if(dti(block_coord[1]) < dti(block_coord[2])){
-          if(lookat[1] > 0){
-            y--;
-          }else{
-            y++;
-          }
-        }else{
-          if(lookat[2] > 0){
-            z--;
-          }else{
-            z++;
-          }
-        }
-      }
-    }
-
-    int cx = floor(x / CHUNK_SIZE);
-    int cz = floor(z / CHUNK_SIZE);
-    for(unsigned short i = 0; i < chunk_count; i++){
-      struct chunk* other = chunks[i];
-      if(other->x == cx && other->z == cz){
-        chunk_set(other, x % CHUNK_SIZE, y, z % CHUNK_SIZE, left_mouse ? 0 : current_block);
-        break;
       }
     }
   }
