@@ -43,10 +43,8 @@ struct chunk *chunks[MAX_CHUNKS];
 unsigned short chunk_count = 0;
 unsigned char running = 1;
 
-unsigned int shader, texture, projection_location, view_location, camera_position_location, light_direction_location, light_intensity_location;
+unsigned int shader, texture, projection_location, view_location, camera_position_location, light_direction_location, daylight_location;
 Skybox skybox;
-vec3 light_direction = {0.0f, 1.0f, 0.1f};
-float light_angle = 0.0f;
 mat4 projection = GLMS_MAT4_IDENTITY_INIT;
 
 pthread_t chunk_update_thread_id;
@@ -54,9 +52,31 @@ pthread_t chunk_update_thread_id;
 unsigned char reloadPress = 0;
 
 uint8_t current_block = 1;
+unsigned short day_length = 60;
 
 float dti(float val){
   return fabsf(val - roundf(val));
+}
+
+float time_of_day(){
+  if(day_length <= 0){
+    return 0.5f;
+  }
+
+  float t = glfwGetTime() / day_length;
+  t = t - (int)t;
+  return t;
+}
+
+float get_daylight(){
+  float timer = time_of_day();
+  if(timer < 0.5f){
+    float t = (timer - 0.25f) * 100.0f;
+    return 1.0f / (1.0f + powf(2.0f, -t));
+  }else{
+    float t = (timer - 0.85f) * 100.0f;
+    return 1.0f - 1.0f / (1.0f + powf(2.0f, -t));
+  }
 }
 
 void get_sight_vector(float rx, float ry, float *vx, float *vy, float *vz){
@@ -292,13 +312,15 @@ void voxel_state_init(){
   view_location = shader_uniform_position(shader, "view");
   camera_position_location = shader_uniform_position(shader, "camera_position");
   light_direction_location = shader_uniform_position(shader, "light_direction");
-  light_intensity_location = shader_uniform_position(shader, "light_intensity");
+  daylight_location = shader_uniform_position(shader, "daylight");
   shader_uniform1i(shader, "diffuse_texture", 0);
 
   texture = texture_create("tiles.png", GL_NEAREST);
 
   skybox_init();
   skybox_create(&skybox);
+
+  glfwSetTime(day_length / 3.0f);
 
   if(pthread_create(&chunk_update_thread_id, NULL, &chunk_update_thread, NULL)){
     fprintf(stderr, "failed to create chunk mesh thread\n");
@@ -338,11 +360,6 @@ void voxel_state_update(float deltaTime){
     // printf("done\n");
   }
 
-  light_angle += 10.0f * deltaTime;
-  double light_angle_rad = glm_rad(light_angle);
-  light_direction[0] = (float)sin(light_angle_rad);
-  light_direction[1] = (float)cos(light_angle_rad);
-
   camera_update();
 #if WALKING
   if(collide(&camera_position[0], &camera_position[1], &camera_position[2])){
@@ -374,19 +391,10 @@ void voxel_state_draw(){
   shader_bind(shader);
   texture_bind(texture, 0);
 
-  float light_intensity = 1.0f;
-  if(light_angle >= 90.0f){
-    light_intensity = 0.0f;
-
-    if(light_angle >= 360.0f){
-      light_angle = -90.0f;
-    }
-  }else if(light_angle <= -80.0f || light_angle >= 80.0f){
-    light_intensity = 1.0f - (float)(abs(light_angle) - 80.0f) / 10.0f;
-  }
-
-  glUniform3fv(light_direction_location, 1, light_direction);
-  glUniform1f(light_intensity_location, light_intensity);
+  const float daylight = get_daylight();
+  glUniform1f(daylight_location, daylight);
+  // vec3 light_direction = {sinf(glm_rad(daylight)), cosf(glm_rad(daylight)), 0.1f};
+  // glUniform3fv(light_direction_location, 1, light_direction);
 
   glm_perspective(glm_rad(65.0f), (float)cengine.width/(float)cengine.height, 0.1f, SKYBOX_SIZE * 2.0f, projection);
   shader_uniform_matrix4fv_at(projection_location, projection[0]);
