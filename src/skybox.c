@@ -12,7 +12,7 @@
 unsigned int skybox_shader, skybox_projection_location, skybox_view_location;
 
 #define DAY_COLOR (vec3){0.3f, 0.6f, 0.8f}
-#define SUNSET_COLOR (vec3){0.6f, 0.3f, 0.05f}
+#define NIGHT_COLOR (vec3){0.0f, 0.0f, 0.0f}
 
 const short skybox_vertices[] = {
    SKYBOX_SIZE,  SKYBOX_SIZE,  SKYBOX_SIZE,
@@ -100,12 +100,12 @@ void skybox_delete(Skybox *skybox){
   glDeleteVertexArrays(1, &skybox->vao);
 }
 
-void skybox_draw(Skybox *skybox){
+void skybox_draw(Skybox *skybox, float time){
   shader_bind(skybox_shader);
   shader_uniform_matrix4fv_at(skybox_view_location, view[0]);
 
   vec3 color = GLMS_VEC3_ZERO_INIT;
-  glm_vec3_lerp(SUNSET_COLOR, DAY_COLOR, sin(glfwGetTime() / 6.0f) / 2.0f + 0.5f, color);
+  glm_vec3_lerp(NIGHT_COLOR, DAY_COLOR, time, color);
   shader_uniform3fv(skybox_shader, "color", color);
 
   glBindVertexArray(skybox->vao);

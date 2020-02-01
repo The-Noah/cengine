@@ -12,6 +12,6 @@ void skybox_free();
 void skybox_projection(float* projection_matrix);
 void skybox_create(Skybox *skybox);
 void skybox_delete(Skybox *skybox);
-void skybox_draw(Skybox *skybox);
+void skybox_draw(Skybox *skybox, float time);
 
 #endif

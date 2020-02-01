@@ -194,5 +194,5 @@ void game_state_draw(){
   drawable_draw(light);
 
   skybox_projection(projection[0]);
-  skybox_draw(&skybox);
+  skybox_draw(&skybox, 1.0f);
 }

@@ -421,7 +421,7 @@ void voxel_state_draw(){
   }
 
   skybox_projection(projection[0]);
-  skybox_draw(&skybox);
+  skybox_draw(&skybox, daylight);
 }
 
 void voxel_state_on_key(GLFWwindow* window, int key, int scancode, int action, int mods){
