@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -15,6 +16,10 @@
 #include "blocks.h"
 
 #define TEXTURE_SIZE 4
+
+float uv_center(float coord){
+  return (coord + 0.5f) / TEXTURE_SIZE;
+}
 
 void byte4_set(GLbyte x, GLbyte y, GLbyte z, GLbyte w, byte4 dest){
   dest[0] = x;
@@ -140,8 +145,8 @@ unsigned char chunk_update(struct chunk *chunk){
 
   float s = 1.0f / TEXTURE_SIZE;
   float du, dv;
-  float a = 0.0f + 1.0f / 1024.0f;
-  float b = s - 1.0f / 1024.0f;
+  float a = 0.0f;// + 1.0f / 1024.0f;
+  float b = s;// - 1.0f / 1024.0f;
 
   for(uint8_t y = 0; y < CHUNK_SIZE; y++){
     for(uint8_t x = 0; x < CHUNK_SIZE; x++){
@@ -157,7 +162,8 @@ unsigned char chunk_update(struct chunk *chunk){
         // -x
         if(is_transparent(chunk_get(chunk, x - 1, y, z))){
           w = blocks[block][0];
-          du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
+          // du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
+          du = w % TEXTURE_SIZE; dv = w / TEXTURE_SIZE;
 
           byte4_set(x, y, z, block, chunk->vertex[i++]);
           byte4_set(x, y + 1, z + 1, block, chunk->vertex[i++]);
@@ -171,18 +177,19 @@ unsigned char chunk_update(struct chunk *chunk){
             byte3_set(-1, 0, 0, chunk->normal[j++]);
           }
 
-          chunk->texCoords[texCoord++] = a + du; chunk->texCoords[texCoord++] = a + dv;
-          chunk->texCoords[texCoord++] = b + du; chunk->texCoords[texCoord++] = b + dv;
-          chunk->texCoords[texCoord++] = a + du; chunk->texCoords[texCoord++] = b + dv;
-          chunk->texCoords[texCoord++] = a + du; chunk->texCoords[texCoord++] = a + dv;
-          chunk->texCoords[texCoord++] = b + du; chunk->texCoords[texCoord++] = a + dv;
-          chunk->texCoords[texCoord++] = b + du; chunk->texCoords[texCoord++] = b + dv;
+          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
+          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
+          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
+          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
+          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
+          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
         }
 
         // +x
         if(is_transparent(chunk_get(chunk, x + 1, y, z))){
           w = blocks[block][1];
-          du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
+          // du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
+          du = w % TEXTURE_SIZE; dv = w / TEXTURE_SIZE;
 
           byte4_set(x + 1, y, z, block, chunk->vertex[i++]);
           byte4_set(x + 1, y + 1, z + 1, block, chunk->vertex[i++]);
@@ -196,18 +203,19 @@ unsigned char chunk_update(struct chunk *chunk){
             byte3_set(1, 0, 0, chunk->normal[j++]);
           }
 
-          chunk->texCoords[texCoord++] = b + du; chunk->texCoords[texCoord++] = a + dv;
-          chunk->texCoords[texCoord++] = a + du; chunk->texCoords[texCoord++] = b + dv;
-          chunk->texCoords[texCoord++] = a + du; chunk->texCoords[texCoord++] = a + dv;
-          chunk->texCoords[texCoord++] = b + du; chunk->texCoords[texCoord++] = a + dv;
-          chunk->texCoords[texCoord++] = b + du; chunk->texCoords[texCoord++] = b + dv;
-          chunk->texCoords[texCoord++] = a + du; chunk->texCoords[texCoord++] = b + dv;
+          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
+          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
+          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
+          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
+          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
+          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
         }
 
         // -z
         if(is_transparent(chunk_get(chunk, x, y, z - 1))){
           w = blocks[block][4];
-          du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
+          // du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
+          du = w % TEXTURE_SIZE; dv = w / TEXTURE_SIZE;
 
           byte4_set(x, y, z, block, chunk->vertex[i++]);
           byte4_set(x + 1, y + 1, z, block, chunk->vertex[i++]);
@@ -221,18 +229,19 @@ unsigned char chunk_update(struct chunk *chunk){
             byte3_set(0, 0, -1, chunk->normal[j++]);
           }
 
-          chunk->texCoords[texCoord++] = a + du; chunk->texCoords[texCoord++] = a + dv;
-          chunk->texCoords[texCoord++] = b + du; chunk->texCoords[texCoord++] = b + dv;
-          chunk->texCoords[texCoord++] = b + du; chunk->texCoords[texCoord++] = a + dv;
-          chunk->texCoords[texCoord++] = a + du; chunk->texCoords[texCoord++] = a + dv;
-          chunk->texCoords[texCoord++] = a + du; chunk->texCoords[texCoord++] = b + dv;
-          chunk->texCoords[texCoord++] = b + du; chunk->texCoords[texCoord++] = b + dv;
+          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
+          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
+          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
+          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
+          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
+          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
         }
 
         // +z
         if(is_transparent(chunk_get(chunk, x, y, z + 1))){
           w = blocks[block][5];
-          du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
+          // du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
+          du = w % TEXTURE_SIZE; dv = w / TEXTURE_SIZE;
 
           byte4_set(x, y, z + 1, block, chunk->vertex[i++]);
           byte4_set(x + 1, y, z + 1, block, chunk->vertex[i++]);
@@ -246,18 +255,19 @@ unsigned char chunk_update(struct chunk *chunk){
             byte3_set(0, 0, 1, chunk->normal[j++]);
           }
 
-          chunk->texCoords[texCoord++] = a + du; chunk->texCoords[texCoord++] = a + dv;
-          chunk->texCoords[texCoord++] = b + du; chunk->texCoords[texCoord++] = a + dv;
-          chunk->texCoords[texCoord++] = b + du; chunk->texCoords[texCoord++] = b + dv;
-          chunk->texCoords[texCoord++] = a + du; chunk->texCoords[texCoord++] = a + dv;
-          chunk->texCoords[texCoord++] = b + du; chunk->texCoords[texCoord++] = b + dv;
-          chunk->texCoords[texCoord++] = a + du; chunk->texCoords[texCoord++] = b + dv;
+          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
+          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
+          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
+          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
+          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
+          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
         }
 
         // -y
         if(is_transparent(chunk_get(chunk, x, y - 1, z))){
           w = blocks[block][3];
-          du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
+          // du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
+          du = w % TEXTURE_SIZE; dv = w / TEXTURE_SIZE;
 
           byte4_set(x, y, z, block, chunk->vertex[i++]);
           byte4_set(x + 1, y, z, block, chunk->vertex[i++]);
@@ -271,18 +281,19 @@ unsigned char chunk_update(struct chunk *chunk){
             byte3_set(0, -1, 0, chunk->normal[j++]);
           }
 
-          chunk->texCoords[texCoord++] = a + du; chunk->texCoords[texCoord++] = a + dv;
-          chunk->texCoords[texCoord++] = b + du; chunk->texCoords[texCoord++] = a + dv;
-          chunk->texCoords[texCoord++] = b + du; chunk->texCoords[texCoord++] = b + dv;
-          chunk->texCoords[texCoord++] = a + du; chunk->texCoords[texCoord++] = a + dv;
-          chunk->texCoords[texCoord++] = b + du; chunk->texCoords[texCoord++] = b + dv;
-          chunk->texCoords[texCoord++] = a + du; chunk->texCoords[texCoord++] = b + dv;
+          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
+          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
+          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
+          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
+          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
+          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
         }
 
         // +y
         if(is_transparent(chunk_get(chunk, x, y + 1, z))){
           w = blocks[block][2];
-          du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
+          // du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
+          du = w % TEXTURE_SIZE; dv = w / TEXTURE_SIZE;
 
           byte4_set(x, y + 1, z, block, chunk->vertex[i++]);
           byte4_set(x, y + 1, z + 1, block, chunk->vertex[i++]);
@@ -296,12 +307,12 @@ unsigned char chunk_update(struct chunk *chunk){
             byte3_set(0, 1, 0, chunk->normal[j++]);
           }
 
-          chunk->texCoords[texCoord++] = a + du; chunk->texCoords[texCoord++] = b + dv;
-          chunk->texCoords[texCoord++] = a + du; chunk->texCoords[texCoord++] = a + dv;
-          chunk->texCoords[texCoord++] = b + du; chunk->texCoords[texCoord++] = a + dv;
-          chunk->texCoords[texCoord++] = a + du; chunk->texCoords[texCoord++] = b + dv;
-          chunk->texCoords[texCoord++] = b + du; chunk->texCoords[texCoord++] = a + dv;
-          chunk->texCoords[texCoord++] = b + du; chunk->texCoords[texCoord++] = b + dv;
+          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
+          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
+          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
+          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
+          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
+          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
         }
       }
     }
