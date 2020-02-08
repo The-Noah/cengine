@@ -371,7 +371,9 @@ void chunk_draw(struct chunk *chunk){
 }
 
 uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
-  if(y < 0 || y >= CHUNK_SIZE){
+  if(y < 0){
+    return 4;
+  }else if(y >= CHUNK_SIZE){
     return 0;
   }
 
