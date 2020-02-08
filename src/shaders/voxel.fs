@@ -22,5 +22,5 @@
 
 "  float f = pow(clamp(gl_FragCoord.z / gl_FragCoord.w / 1000, 0, 0.8), 2);\n"
 
-"  gl_FragColor = vec4(mix(color * light, vec3(0.53, 0.81, 0.92), f), 1.0);\n"
+"  gl_FragColor = vec4(mix(color * light, vec3(0.53, 0.81, 0.92) * daylight, f), 1.0);\n"
 "}"
