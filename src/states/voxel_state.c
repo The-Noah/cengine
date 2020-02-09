@@ -6,6 +6,8 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#else
+#include <unistd.h>
 #endif
 
 #define CGLM_ALL_UNALIGNED

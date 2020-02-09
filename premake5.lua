@@ -29,7 +29,12 @@ workspace "cengine"
     ["description"] = "Build and run",
     ["execute"] =
       function()
-        os.execute("premake5 gmake2 && mingw32-make && bin\\Debug\\cengine.exe")
+        os.execute("premake5 gmake2")
+        if _TARGET_OS == "windows" then
+          os.execute("mingw32-make && bin\\Debug\\cengine.exe")
+        else
+          os.execute("make && ./bin/Debug/cengine")
+        end
       end
   }
 
