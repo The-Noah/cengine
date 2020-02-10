@@ -17,8 +17,10 @@
 
 #define TEXTURE_SIZE 4
 
-float uv_center(float coord){
-  return (coord + 0.5f) / TEXTURE_SIZE;
+float half_pixel_correction(float coord){
+  coord *= (1.0f / TEXTURE_SIZE); // convert texture pos to uv coord
+  return coord;
+  // return (coord + 0.5f) / TEXTURE_SIZE;
 }
 
 void byte4_set(GLbyte x, GLbyte y, GLbyte z, GLbyte w, byte4 dest){
@@ -93,7 +95,7 @@ struct chunk* chunk_init(int x, int z){
       int cx = chunk->x * CHUNK_SIZE + dx;
       int cz = chunk->z * CHUNK_SIZE + dz;
 
-      float f = simplex2(cx * 0.01f, cz * 0.01f, 4, 0.7f, 2.0f);
+      float f = simplex2(cx * 0.01f, cz * 0.01f, 6, 0.7f, 1.5f);
       int h = (f + 1) / 2 * (CHUNK_SIZE - 1) + 1;
 
       for(uint8_t dy = 0; dy < CHUNK_SIZE; dy++){
@@ -143,10 +145,9 @@ unsigned char chunk_update(struct chunk *chunk){
   unsigned int j = 0;
   unsigned int texCoord = 0;
 
-  float s = 1.0f / TEXTURE_SIZE;
   float du, dv;
-  float a = 0.0f;// + 1.0f / 1024.0f;
-  float b = s;// - 1.0f / 1024.0f;
+  float a = 0.0f;
+  float b = 1.0f;
 
   for(uint8_t y = 0; y < CHUNK_SIZE; y++){
     for(uint8_t x = 0; x < CHUNK_SIZE; x++){
@@ -177,12 +178,12 @@ unsigned char chunk_update(struct chunk *chunk){
             byte3_set(-1, 0, 0, chunk->normal[j++]);
           }
 
-          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
-          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
-          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
-          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
-          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
-          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(a + du); chunk->texCoords[texCoord++] = half_pixel_correction(a + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(b + du); chunk->texCoords[texCoord++] = half_pixel_correction(b + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(a + du); chunk->texCoords[texCoord++] = half_pixel_correction(b + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(a + du); chunk->texCoords[texCoord++] = half_pixel_correction(a + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(b + du); chunk->texCoords[texCoord++] = half_pixel_correction(a + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(b + du); chunk->texCoords[texCoord++] = half_pixel_correction(b + dv);
         }
 
         // +x
@@ -203,12 +204,12 @@ unsigned char chunk_update(struct chunk *chunk){
             byte3_set(1, 0, 0, chunk->normal[j++]);
           }
 
-          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
-          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
-          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
-          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
-          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
-          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(b + du); chunk->texCoords[texCoord++] = half_pixel_correction(a + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(a + du); chunk->texCoords[texCoord++] = half_pixel_correction(b + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(a + du); chunk->texCoords[texCoord++] = half_pixel_correction(a + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(b + du); chunk->texCoords[texCoord++] = half_pixel_correction(a + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(b + du); chunk->texCoords[texCoord++] = half_pixel_correction(b + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(a + du); chunk->texCoords[texCoord++] = half_pixel_correction(b + dv);
         }
 
         // -z
@@ -229,12 +230,12 @@ unsigned char chunk_update(struct chunk *chunk){
             byte3_set(0, 0, -1, chunk->normal[j++]);
           }
 
-          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
-          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
-          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
-          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
-          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
-          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(a + du); chunk->texCoords[texCoord++] = half_pixel_correction(a + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(b + du); chunk->texCoords[texCoord++] = half_pixel_correction(b + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(b + du); chunk->texCoords[texCoord++] = half_pixel_correction(a + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(a + du); chunk->texCoords[texCoord++] = half_pixel_correction(a + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(a + du); chunk->texCoords[texCoord++] = half_pixel_correction(b + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(b + du); chunk->texCoords[texCoord++] = half_pixel_correction(b + dv);
         }
 
         // +z
@@ -255,12 +256,12 @@ unsigned char chunk_update(struct chunk *chunk){
             byte3_set(0, 0, 1, chunk->normal[j++]);
           }
 
-          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
-          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
-          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
-          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
-          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
-          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(a + du); chunk->texCoords[texCoord++] = half_pixel_correction(a + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(b + du); chunk->texCoords[texCoord++] = half_pixel_correction(a + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(b + du); chunk->texCoords[texCoord++] = half_pixel_correction(b + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(a + du); chunk->texCoords[texCoord++] = half_pixel_correction(a + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(b + du); chunk->texCoords[texCoord++] = half_pixel_correction(b + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(a + du); chunk->texCoords[texCoord++] = half_pixel_correction(b + dv);
         }
 
         // -y
@@ -281,12 +282,12 @@ unsigned char chunk_update(struct chunk *chunk){
             byte3_set(0, -1, 0, chunk->normal[j++]);
           }
 
-          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
-          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
-          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
-          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
-          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
-          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(a + du); chunk->texCoords[texCoord++] = half_pixel_correction(a + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(b + du); chunk->texCoords[texCoord++] = half_pixel_correction(a + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(b + du); chunk->texCoords[texCoord++] = half_pixel_correction(b + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(a + du); chunk->texCoords[texCoord++] = half_pixel_correction(a + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(b + du); chunk->texCoords[texCoord++] = half_pixel_correction(b + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(a + du); chunk->texCoords[texCoord++] = half_pixel_correction(b + dv);
         }
 
         // +y
@@ -307,12 +308,12 @@ unsigned char chunk_update(struct chunk *chunk){
             byte3_set(0, 1, 0, chunk->normal[j++]);
           }
 
-          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
-          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
-          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
-          chunk->texCoords[texCoord++] = uv_center(a + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
-          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(a + dv);
-          chunk->texCoords[texCoord++] = uv_center(b + du); chunk->texCoords[texCoord++] = uv_center(b + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(a + du); chunk->texCoords[texCoord++] = half_pixel_correction(b + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(a + du); chunk->texCoords[texCoord++] = half_pixel_correction(a + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(b + du); chunk->texCoords[texCoord++] = half_pixel_correction(a + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(a + du); chunk->texCoords[texCoord++] = half_pixel_correction(b + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(b + du); chunk->texCoords[texCoord++] = half_pixel_correction(a + dv);
+          chunk->texCoords[texCoord++] = half_pixel_correction(b + du); chunk->texCoords[texCoord++] = half_pixel_correction(b + dv);
         }
       }
     }
