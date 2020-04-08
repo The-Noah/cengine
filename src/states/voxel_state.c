@@ -20,9 +20,8 @@
 #include "../camera.h"
 #include "../skybox.h"
 
-#define CHUNK_RENDER_RADIUS 16
-#define CHUNK_DELETE_RADIUS 18
-#define MAX_CHUNKS_GENERATED_PER_FRAME 32
+#define MAX_CHUNKS_GENERATED_PER_FRAME 4
+#define REACH_DISTANCE 12.0f
 
 const static int8_t FACES[6][3] = {
   { 1, 0, 0},
@@ -41,8 +40,9 @@ const static char* voxel_fragment_shader_source = ""
   #include "../shaders/voxel.fs"
 ;
 
-struct chunk *chunks[MAX_CHUNKS];
+struct chunk *chunks;
 unsigned short chunk_count = 0;
+unsigned short chunks_capacity = 1024;
 unsigned char running = 1;
 
 unsigned int shader, texture, projection_location, view_location, camera_position_location, light_direction_location, daylight_location;
@@ -88,26 +88,31 @@ void get_sight_vector(float rx, float ry, float *vx, float *vy, float *vz){
   *vz = sinf(rx - glm_rad(90.0f)) * m;
 }
 
-int _hit_test(uint8_t *blocks, float max_distance, float x, float y, float z, float vx, float vy, float vz, int *hx, int *hy, int *hz){
-  uint8_t m = 8;
+uint8_t _hit_test(uint8_t *blocks, float max_distance, float x, float y, float z, float vx, float vy, float vz, int *hx, int *hy, int *hz){
+  uint8_t m = 32;
   int px = 0;
   int py = 0;
   int pz = 0;
 
   for(unsigned short i = 0; i < max_distance * m; i++){
-    int nx = round(x);
-    int ny = round(y);
-    int nz = round(z);
+    int nx = roundf(x);
+    int ny = roundf(y);
+    int nz = roundf(z);
 
     if(nx != px || ny != py || nz != pz){
-      if(blocks[block_index(nx % CHUNK_SIZE, ny, nz % CHUNK_SIZE)]){
-        printf("hit block %d at %d %d\n", blocks[block_index(nx % CHUNK_SIZE, ny, nz % CHUNK_SIZE)], nx % CHUNK_SIZE, nz % CHUNK_SIZE);
+      uint8_t block = blocks[block_index(nx % CHUNK_SIZE, ny % CHUNK_SIZE, nz % CHUNK_SIZE)];
+      if(block > 0){
+        printf("hit block %d at %d %d %d\n", block, nx % CHUNK_SIZE, ny % CHUNK_SIZE, nz % CHUNK_SIZE);
         *hx = nx;
         *hy = ny;
         *hz = nz;
 
         return 1;
       }
+
+      px = nx;
+      py = ny;
+      pz = pz;
     }
 
     x += vx / m;
@@ -118,8 +123,8 @@ int _hit_test(uint8_t *blocks, float max_distance, float x, float y, float z, fl
   return 0;
 }
 
-int hit_test(float x, float y, float z, float rx, float ry, int *bx, int *by, int *bz){
-  int result = 0;
+uint8_t hit_test(float x, float y, float z, float rx, float ry, int *bx, int *by, int *bz){
+  uint8_t result = 0;
   float best = 0.0f;
 
   int cx = round(x) / CHUNK_SIZE;
@@ -129,7 +134,7 @@ int hit_test(float x, float y, float z, float rx, float ry, int *bx, int *by, in
   get_sight_vector(rx, ry, &vx, &vy, &vz);
 
   for(unsigned short i = 0; i < chunk_count; i++){
-    struct chunk *chunk = chunks[i];
+    struct chunk *chunk = &chunks[i];
     int dx = chunk->x - cx;
     int dz = chunk->z - cz;
     if(abs(dx) > 1 || abs(dz) > 1){
@@ -137,7 +142,7 @@ int hit_test(float x, float y, float z, float rx, float ry, int *bx, int *by, in
     }
 
     int hx, hy, hz;
-    if(_hit_test(chunk->blocks, 4.0f, x, y, z, vx, vy, vz, &hx, &hy, &hz)){
+    if(_hit_test(chunk->blocks, 12.0f, x, y, z, vx, vy, vz, &hx, &hy, &hz)){
       float d = sqrtf(powf(hx - x, 2.0f) + powf(hy - y, 2.0f) + powf(hz - z, 2.0f));
       if(best == 0 || d < best){
         best = d;
@@ -158,10 +163,11 @@ void* chunk_update_thread(){
     unsigned short chunk_meshes_generated = 0;
     for(unsigned short i = 0; i < chunk_count; i++){
       if(chunk_meshes_generated >= MAX_CHUNKS_GENERATED_PER_FRAME){
+        // printf("generated max number of chunk meshes for frame\n");
         break;
       }
 
-      chunk_meshes_generated += chunk_update(chunks[i]);
+      chunk_meshes_generated += chunk_update(&chunks[i]);
     }
 
 #ifdef _WIN32
@@ -174,45 +180,112 @@ void* chunk_update_thread(){
   return NULL;
 }
 
-void ensure_chunks(int x, int z){
+uint8_t verc_ray_march(float x, float y, float z, float rx, float ry, int *bx, int *by, int *bz, int *cx, int *cy, int *cz){
+  int px = roundf(x) / CHUNK_SIZE;
+  int py = roundf(y) / CHUNK_SIZE;
+  int pz = roundf(z) / CHUNK_SIZE;
+
+  float vx, vy, vz;
+  get_sight_vector(rx, ry, &vx, &vy, &vz);
+
+  float t = 0.0f;
+
+  while(t < REACH_DISTANCE){
+    float rayx = x + vx * t;
+    float rayy = y + vy * t;
+    float rayz = z + vz * t;
+
+    for(unsigned short i = 0; i < chunk_count; i++){
+      struct chunk *chunk = &chunks[i];
+      int dx = chunk->x - px;
+      int dy = chunk->y - py;
+      int dz = chunk->z - pz;
+      if(abs(dx) > 1 || abs(dy) > 1 || abs(dz) > 1){
+        continue;
+      }
+      // if(chunk->x != cx || chunk->z != cz){
+      //   continue;
+      // }
+
+      int nx = abs(roundf(rayx));
+      int ny = abs(roundf(rayy));
+      int nz = abs(roundf(rayz));
+
+      uint8_t block = chunk->blocks[block_index(nx % CHUNK_SIZE, ny % CHUNK_SIZE, nz % CHUNK_SIZE)];
+      if(block > 0){
+        printf("chunk: %d %d\n", chunk->x, chunk->z);
+        printf("hit block %d at %d %d %d\n", block, nx % CHUNK_SIZE, ny % CHUNK_SIZE, nz % CHUNK_SIZE);
+        *bx = nx;
+        *by = ny;
+        *bz = nz;
+        *cx = chunk->x;
+        *cy = chunk->y;
+        *cz = chunk->z;
+
+        return 1;
+      }
+    }
+
+    t += 0.5f;
+  }
+
+  return 0;
+}
+
+void ensure_chunks(int x, int y, int z){
   for(unsigned short i = 0; i < chunk_count; i++){
-    struct chunk *chunk = chunks[i];
+    struct chunk *chunk = &chunks[i];
     int dx = x - chunk->x;
+    int dy = y - chunk->y;
     int dz = z - chunk->z;
 
-    if(abs(dx) >= CHUNK_DELETE_RADIUS || abs(dz) >= CHUNK_DELETE_RADIUS){
+    if(abs(dx) >= CHUNK_DELETE_RADIUS || abs(dy) >= CHUNK_DELETE_RADIUS || abs(dz) >= CHUNK_DELETE_RADIUS){
       chunk_free(chunk);
 
-      struct chunk *other = chunks[--chunk_count];
+      struct chunk *other = &chunks[--chunk_count];
       memcpy(chunk, other, sizeof(struct chunk));
     }
   }
 
+  unsigned short chunks_generated = 0;
   for(char i = -CHUNK_CREATE_RADIUS; i <= CHUNK_CREATE_RADIUS; i++){
     for(char j = -CHUNK_CREATE_RADIUS; j <= CHUNK_CREATE_RADIUS; j++){
-      int a = x + i;
-      int b = z + j;
-      unsigned char create = 1;
+      for(char k = -CHUNK_CREATE_RADIUS; k <= CHUNK_CREATE_RADIUS; k++){
+        int cx = x + i;
+        int cy = y + k;
+        int cz = z + j;
+        unsigned char create = 1;
 
-      for(unsigned short k = 0; k < chunk_count; k++){
-        struct chunk *chunk = chunks[k];
-        if(chunk->x == a && chunk->z == b){
-          create = 0;
-          break;
-        }
-      }
-
-      if(create){
-        if(chunk_count >= MAX_CHUNKS){
-          printf("reached max number of chunks\n");
-          return;
+        for(unsigned short l = 0; l < chunk_count; l++){
+          struct chunk *chunk = &chunks[l];
+          if(chunk->x == cx && chunk->y == cy && chunk->z == cz){
+            create = 0;
+            break;
+          }
         }
 
-        struct chunk *chunk = chunk_init(a, b);
-        chunks[chunk_count++] = chunk;
+        if(create){
+          if(chunk_count + 1 >= chunks_capacity){
+            chunks_capacity *= 2;
+            printf("reached max number of chunks, resizing to %d\n", chunks_capacity);
+            chunks = realloc(chunks, chunks_capacity * sizeof(struct chunk));
+          }
+
+          struct chunk chunk = chunk_init(cx, cy, cz);
+          chunks[chunk_count] = chunk;
+          chunk_count++;
+          chunks_generated++;
+
+          if(chunks_generated >= MAX_CHUNKS_GENERATED_PER_FRAME){
+            // printf("generated max number of chunks for this frame\n");
+            return;
+          }
+        }
       }
     }
   }
+
+  // printf("generated %d chunks\n", chunks_generated);
 }
 
 #if WALKING
@@ -307,6 +380,8 @@ uint8_t collide(float *x, float *y, float *z){
 void voxel_state_init(){
   printf("voxel state init\n");
 
+  chunks = malloc(chunks_capacity * sizeof(struct chunk));
+
   shader = shader_create(voxel_vertex_shader_source, voxel_fragment_shader_source);
   shader_bind(shader);
 
@@ -335,8 +410,10 @@ void voxel_state_destroy(){
   printf("voxel state destroy\n");
 
   for(unsigned short i = 0; i < chunk_count; i++){
-    chunk_free(chunks[i]);
+    chunk_free(&chunks[i]);
   }
+
+  free(chunks);
 
   skybox_delete(&skybox);
   skybox_free();
@@ -373,15 +450,15 @@ void voxel_state_update(float deltaTime){
   unsigned char right_mouse = glfwGetMouseButton(cengine.window, GLFW_MOUSE_BUTTON_RIGHT);
   
   if(left_mouse || right_mouse){
-    int hx, hy, hz;
-    if(hit_test(camera_position[0], camera_position[1], camera_position[2], camera_pitch, camera_yaw, &hx, &hy, &hz)){
-      int cx = hx / CHUNK_SIZE;
-      int cz = hz / CHUNK_SIZE;
+    int hx, hy, hz, cx, cy, cz;
+    if(verc_ray_march(camera_position[0], camera_position[1], camera_position[2], camera_pitch, camera_yaw, &hx, &hy, &hz, &cx, &cy, &cz)){
+      // int cx = hx / CHUNK_SIZE;
+      // int cz = hz / CHUNK_SIZE;
 
       for(unsigned short i = 0; i < chunk_count; i++){
-        struct chunk *chunk = chunks[i];
+        struct chunk *chunk = &chunks[i];
         if(chunk->x == cx && chunk->z == cz){
-          chunk_set(chunk, hx % CHUNK_SIZE, hy, hz % CHUNK_SIZE, left_mouse ? 0 : current_block);
+          chunk_set(chunk, hx % CHUNK_SIZE, hy % CHUNK_SIZE, hz % CHUNK_SIZE, left_mouse ? 0 : current_block);
           break;
         }
       }
@@ -404,23 +481,30 @@ void voxel_state_draw(){
   glUniformMatrix4fv(view_location, 1, GL_FALSE, view[0]);
   glUniform3fv(camera_position_location, 1, camera_position);
 
-  int x = floor(camera_position[0] / CHUNK_SIZE);
-  int z = floor(camera_position[2] / CHUNK_SIZE);
-  ensure_chunks(x, z);
+  int x = floorf(camera_position[0] / CHUNK_SIZE);
+  int y = floorf(camera_position[1] / CHUNK_SIZE);
+  int z = floorf(camera_position[2] / CHUNK_SIZE);
+  ensure_chunks(x, y, z);
 
+  unsigned short rendered_chunks = 0;
   for(unsigned short i = 0; i < chunk_count; i++){
-    struct chunk *chunk = chunks[i];
+    struct chunk *chunk = &chunks[i];
 
-    if(!chunk->elements || abs(x - chunk->x) > CHUNK_RENDER_RADIUS || abs(z - chunk->z) > CHUNK_RENDER_RADIUS){
+    if(!chunk->elements){
+      // printf("empty chunk\n");
+    }
+    if(!chunk->elements || abs(x - chunk->x) > CHUNK_RENDER_RADIUS || abs(y - chunk->y) > CHUNK_RENDER_RADIUS || abs(z - chunk->z) > CHUNK_RENDER_RADIUS){
       continue;
     }
 
     mat4 model = GLMS_MAT4_IDENTITY_INIT;
-    glm_translate(model, (vec3){chunk->x * CHUNK_SIZE, 0, chunk->z * CHUNK_SIZE});
+    glm_translate(model, (vec3){chunk->x * CHUNK_SIZE, chunk->y * CHUNK_SIZE, chunk->z * CHUNK_SIZE});
     shader_uniform_matrix4fv(shader, "model", model[0]);
 
     chunk_draw(chunk);
+    rendered_chunks++;
   }
+  // printf("rendered %d chunks\n", rendered_chunks);
 
   skybox_projection(projection[0]);
   skybox_draw(&skybox, daylight);

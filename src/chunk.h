@@ -23,6 +23,7 @@ struct chunk{
   uint8_t changed;
   uint8_t mesh_changed;
   int x;
+  int y;
   int z;
   byte4 *vertex;
   char *brightness;
@@ -30,12 +31,14 @@ struct chunk{
   float *texCoords;
   struct chunk *px;
   struct chunk *nx;
+  struct chunk *py;
+  struct chunk *ny;
   struct chunk *pz;
   struct chunk *nz;
 };
 
 unsigned short block_index(uint8_t x, uint8_t y, uint8_t z);
-struct chunk* chunk_init(int x, int z);
+struct chunk chunk_init(int x, int y, int z);
 void chunk_free(struct chunk *chunk);
 unsigned char chunk_update(struct chunk *chunk);
 void chunk_draw(struct chunk *chunk);

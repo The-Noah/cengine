@@ -47,21 +47,31 @@ unsigned char is_transparent(uint8_t block){
 }
 
 void chunk_get_neighbors(struct chunk *chunk){
-  if(chunk->px != NULL && chunk->nx != NULL && chunk->pz != NULL && chunk->nz != NULL){
+  if(chunk->px != NULL && chunk->nx != NULL && chunk->py != NULL && chunk->ny != NULL && chunk->pz != NULL && chunk->nz != NULL){
     return;
   }
 
   for(unsigned short i = 0; i < chunk_count; i++){
-    struct chunk *other = chunks[i];
+    struct chunk *other = &chunks[i];
 
-    if(other->x == chunk->x + 1 && other->z == chunk->z){
+    if(other->x == chunk->x + 1 && other->y == chunk->y && other->z == chunk->z){
       chunk->px = other;
-    }else if(other->x == chunk->x - 1 && other->z == chunk->z){
+      // printf("px\n");
+    }else if(other->x == chunk->x - 1 && other->y == chunk->y && other->z == chunk->z){
       chunk->nx = other;
-    }else if(other->x == chunk->x && other->z == chunk->z + 1){
+      // printf("nx\n");
+    }else if(other->x == chunk->x && other->y == chunk->y + 1 && other->z == chunk->z){
+      chunk->py = other;
+      // printf("py\n");
+    }else if(other->x == chunk->x && other->y == chunk->y - 1 && other->z == chunk->z){
+      chunk->ny = other;
+      // printf("ny\n");
+    }else if(other->x == chunk->x && other->y == chunk->y && other->z == chunk->z + 1){
       chunk->pz = other;
-    }else if(other->x == chunk->x && other->z == chunk->z - 1){
+      // printf("pz\n");
+    }else if(other->x == chunk->x && other->y == chunk->y && other->z == chunk->z - 1){
       chunk->nz = other;
+      // printf("nz\n");
     }
   }
 }
@@ -70,13 +80,16 @@ unsigned short block_index(uint8_t x, uint8_t y, uint8_t z){
   return x + y * CHUNK_SIZE + z * CHUNK_SIZE_SQUARED;
 }
 
-struct chunk* chunk_init(int x, int z){
+struct chunk chunk_init(int x, int y, int z){
+  double start = glfwGetTime();
+
   struct chunk* chunk = malloc(sizeof(struct chunk));
   chunk->blocks = malloc(CHUNK_SIZE_CUBED * sizeof(uint8_t));
   chunk->elements = 0;
   chunk->changed = 1;
   chunk->mesh_changed = 0;
   chunk->x = x;
+  chunk->y = y;
   chunk->z = z;
   chunk->vertex = malloc(CHUNK_SIZE_CUBED * 2 * sizeof(byte4));
   chunk->brightness = malloc(CHUNK_SIZE_CUBED * 2 * sizeof(char));
@@ -84,6 +97,8 @@ struct chunk* chunk_init(int x, int z){
   chunk->texCoords = malloc(CHUNK_SIZE_CUBED * 4 * sizeof(float));
   chunk->px = NULL;
   chunk->nx = NULL;
+  chunk->py = NULL;
+  chunk->ny = NULL;
   chunk->pz = NULL;
   chunk->nz = NULL;
 
@@ -95,13 +110,14 @@ struct chunk* chunk_init(int x, int z){
       int cx = chunk->x * CHUNK_SIZE + dx;
       int cz = chunk->z * CHUNK_SIZE + dz;
 
-      float f = simplex2(cx * 0.01f, cz * 0.01f, 6, 0.7f, 1.5f);
-      int h = (f + 1) / 2 * (CHUNK_SIZE - 1) + 1;
+      float f = simplex2(cx * 0.005f, cz * 0.005f, 6, 0.5f, 1.5f);
+      int h = (f + 1) / 2 * (CHUNK_SIZE * 6 - 1) + 1;
+      int rh = h - chunk->y * CHUNK_SIZE;
 
       for(uint8_t dy = 0; dy < CHUNK_SIZE; dy++){
-        uint8_t thickness = h - dy;
-        uint8_t block = dy < 9 && thickness <= 3 ? 5 : thickness == 1 ? 1 : thickness <= 3 ? 3 : 2;
-        chunk->blocks[block_index(dx, dy, dz)] = dy < h ? dy == 0 ? 4 : block : 0;
+        uint8_t thickness = rh - dy;
+        uint8_t block = h < CHUNK_SIZE * 1.5 && thickness <= 3 ? 5 : thickness == 1 ? 1 : thickness <= 3 ? 3 : 2;
+        chunk->blocks[block_index(dx, dy, dz)] = dy < rh ? h == 0 ? 4 : block : 0;
         if(dy < h){
           count++;
         }
@@ -109,9 +125,10 @@ struct chunk* chunk_init(int x, int z){
     }
   }
 
+  // printf("chunk gen: %.2fms\n", (glfwGetTime() - start) * 1000.0);
   // printf("generated chunk at %d %d with %d blocks\n", x, z, count);
 
-  return chunk;
+  return *chunk;
 }
 
 void chunk_free(struct chunk *chunk){
@@ -123,21 +140,20 @@ void chunk_free(struct chunk *chunk){
   free(chunk->texCoords);
   chunk->px = NULL;
   chunk->nx = NULL;
+  chunk->py = NULL;
+  chunk->ny = NULL;
   chunk->pz = NULL;
   chunk->nz = NULL;
 }
 
 unsigned char chunk_update(struct chunk *chunk){
   chunk_get_neighbors(chunk);
-  if(chunk->px == NULL || chunk->nx == NULL || chunk->pz == NULL || chunk->nz == NULL){
+  if(chunk->px == NULL || chunk->nx == NULL || chunk->py == NULL || chunk->ny == NULL || chunk->pz == NULL || chunk->nz == NULL || !chunk->changed){
+    // printf("missing neighbor\n");
     return 0;
   }
 
-  if(!chunk->changed){
-    return 0;
-  }
-
-  double start = glfwGetTime();
+  // double start = glfwGetTime();
 
   chunk->changed = 0;
 
@@ -324,7 +340,6 @@ unsigned char chunk_update(struct chunk *chunk){
   // printf("created chunk with %d vertices\n", i);
 
   // printf("cm: %.2fms\n", (glfwGetTime() - start) * 1000.0);
-
   return 1;
 }
 
@@ -372,12 +387,6 @@ void chunk_draw(struct chunk *chunk){
 }
 
 uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
-  if(y < 0){
-    return 4;
-  }else if(y >= CHUNK_SIZE){
-    return 0;
-  }
-
   // if(x < 0 || x >= CHUNK_SIZE ||
   //    z < 0 || z >= CHUNK_SIZE){
   //   vec2i block_global_position = {floor(chunk->x * CHUNK_SIZE + x), floor(chunk->z * CHUNK_SIZE + z)};
@@ -398,23 +407,42 @@ uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
 
   //   return 0;
   // }
+
+  uint8_t block;
+
+  // printf("%d %d %d\n", x, y, z);
   if(x < 0){
-    return chunk->nx->blocks[block_index(CHUNK_SIZE + x, y, z)];
+    // printf("nx\n");
+    block = chunk->nx->blocks[block_index(CHUNK_SIZE + x, y, z)];
   }else if(x >= CHUNK_SIZE){
-    return chunk->px->blocks[block_index(x % CHUNK_SIZE, y, z)];
+    // printf("px\n");
+    block = chunk->px->blocks[block_index(x % CHUNK_SIZE, y, z)];
+  }else if(y < 0){
+    // printf("ny\n");
+    block = chunk->ny->blocks[block_index(x, CHUNK_SIZE + y, z)];
+  }else if(y >= CHUNK_SIZE){
+    // printf("py\n");
+    block = chunk->py->blocks[block_index(x, y % CHUNK_SIZE, z)];
   }else if(z < 0){
-    return chunk->nz->blocks[block_index(x, y, CHUNK_SIZE + z)];
+    // printf("nz\n");
+    block = chunk->nz->blocks[block_index(x, y, CHUNK_SIZE + z)];
   }else if(z >= CHUNK_SIZE){
-    return chunk->pz->blocks[block_index(x, y, z % CHUNK_SIZE)];
+    // printf("pz\n");
+    block = chunk->pz->blocks[block_index(x, y, z % CHUNK_SIZE)];
+  }else{
+    // printf("c\n");
+    block = chunk->blocks[block_index(x, y, z)];
   }
 
-  return chunk->blocks[block_index(x, y, z)];
+  // printf("c %d\n", block);
+  return block;
 }
 
 void chunk_set(struct chunk *chunk, int x, int y, int z, uint8_t block){
+  printf("chunk set: %d %d\n", chunk->x, chunk->z);
   unsigned short access = block_index(x, y, z);
   uint8_t _block = chunk->blocks[access];
-  printf("trying to set block %d %d from %d to %d\n", x, z, _block, block);
+  printf("trying to set block %d %d %d from %d to %d\n", x, y, z, _block, block);
   if(_block == 4 || _block == block){
     return;
   }
@@ -426,6 +454,10 @@ void chunk_set(struct chunk *chunk, int x, int y, int z, uint8_t block){
     chunk->nx->changed = 1;
   }else if(x == CHUNK_SIZE - 1 && chunk->px != NULL){
     chunk->px->changed = 1;
+  }else if(y == 0 && chunk->ny != NULL){
+    chunk->ny->changed = 1;
+  }else if(y == CHUNK_SIZE - 1 && chunk->py != NULL){
+    chunk->py->changed = 1;
   }else if(z == 0 && chunk->nz != NULL){
     chunk->nz->changed = 1;
   }else if(z == CHUNK_SIZE - 1 && chunk->pz != NULL){

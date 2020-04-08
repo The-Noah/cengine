@@ -25,15 +25,29 @@ workspace "cengine"
   }
 
   newaction {
-    ["trigger"] = "dev",
-    ["description"] = "Build and run",
+    ["trigger"] = "build",
+    ["description"] = "Build",
     ["execute"] =
       function()
         os.execute("premake5 gmake2")
         if _TARGET_OS == "windows" then
-          os.execute("mingw32-make && bin\\Debug\\cengine.exe")
+          os.execute("mingw32-make")
         else
-          os.execute("make && ./bin/Debug/cengine")
+          os.execute("make")
+        end
+      end
+  }
+
+  newaction {
+    ["trigger"] = "dev",
+    ["description"] = "Build and run",
+    ["execute"] =
+      function()
+        os.execute("premake5 build")
+        if _TARGET_OS == "windows" then
+          os.execute("bin\\Debug\\cengine.exe")
+        else
+          os.execute("./bin/Debug/cengine")
         end
       end
   }

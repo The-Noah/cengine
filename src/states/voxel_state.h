@@ -7,10 +7,11 @@
 
 #include "../chunk.h"
 
-#define MAX_CHUNKS 4096
-#define CHUNK_CREATE_RADIUS 17
+#define CHUNK_RENDER_RADIUS 6
+#define CHUNK_CREATE_RADIUS 7
+#define CHUNK_DELETE_RADIUS 8
 
-struct chunk *chunks[MAX_CHUNKS];
+struct chunk *chunks;
 unsigned short chunk_count;
 
 void voxel_state_init();

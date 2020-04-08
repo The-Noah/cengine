@@ -18,7 +18,7 @@
 "  vec3 normal = normalize(vNormal);"
 
 "  float ambient = daylight * 0.9;"
-"  vec3 light = vec3(max(max(0.005, daylight * 0.08), ambient * vDiffuse) * vBrightness);"
+"  vec3 light = vec3(max(max(0.01, daylight * 0.08), ambient * vDiffuse) * vBrightness);"
 
 "  float f = pow(clamp(gl_FragCoord.z / gl_FragCoord.w / 1000, 0, 0.8), 2);\n"
 

@@ -1,7 +1,7 @@
 #include "game_state.h"
 
 #include <stdio.h>
-#include <unistd.h>
+// #include <unistd.h>
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -79,24 +79,24 @@ void game_state_init(){
   // cube = drawable_create(&models[CUBE]);
 
 #ifdef DEBUG
-  if(access("shaders/standard.vs", F_OK) != -1){
-    cube_vertex_shader_source = read_file("shaders/standard.vs");
-  }
-  if(access("shaders/standard.fs", F_OK) != -1){
-    cube_fragment_shader_source = read_file("shaders/standard.fs");
-  }
+//  if(access("shaders/standard.vs", F_OK) != -1){
+//    cube_vertex_shader_source = read_file("shaders/standard.vs");
+//  }
+//  if(access("shaders/standard.fs", F_OK) != -1){
+//    cube_fragment_shader_source = read_file("shaders/standard.fs");
+//  }
 #endif
 
   shader = shader_create(cube_vertex_shader_source, cube_fragment_shader_source);
   shader_bind(shader);
 
 #ifdef DEBUG
-  if(access("shaders/standard.vs", F_OK) != -1){
-    free(cube_vertex_shader_source);
-  }
-  if(access("shaders/standard.fs", F_OK) != -1){
-    free(cube_fragment_shader_source);
-  }
+//  if(access("shaders/standard.vs", F_OK) != -1){
+//    free(cube_vertex_shader_source);
+//  }
+//  if(access("shaders/standard.fs", F_OK) != -1){
+//    free(cube_fragment_shader_source);
+//  }
 #endif
 
   texture = texture_create("spawnbeacon.png", GL_LINEAR);
