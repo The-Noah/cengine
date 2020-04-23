@@ -433,21 +433,75 @@ uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
   // printf("%d %d %d\n", x, y, z);
   if(x < 0){
     // printf("nx\n");
+    // for(unsigned short i = 0; i < chunk_count; i++){
+    //   struct chunk *other = &chunks[i];
+
+    //   if(other->x == chunk->x - 1 && other->y == chunk->y && other->z == chunk->z){
+    //     return other->blocks[block_index(CHUNK_SIZE + x, y, z)];
+    //   }
+    // }
+    // return 4;
+
     block = chunk->nx == NULL ? 4 : chunk->nx->blocks[block_index(CHUNK_SIZE + x, y, z)];
   }else if(x >= CHUNK_SIZE){
     // printf("px\n");
+    // for(unsigned short i = 0; i < chunk_count; i++){
+    //   struct chunk *other = &chunks[i];
+
+    //   if(other->x == chunk->x + 1 && other->y == chunk->y && other->z == chunk->z){
+    //     return other->blocks[block_index(x % CHUNK_SIZE, y, z)];
+    //   }
+    // }
+    // return 4;
+
     block = chunk->px == NULL ? 4 : chunk->px->blocks[block_index(x % CHUNK_SIZE, y, z)];
   }else if(y < 0){
     // printf("ny\n");
+    // for(unsigned short i = 0; i < chunk_count; i++){
+    //   struct chunk *other = &chunks[i];
+
+    //   if(other->x == chunk->x && other->y == chunk->y - 1 && other->z == chunk->z){
+    //     return other->blocks[block_index(x, CHUNK_SIZE + y, z)];
+    //   }
+    // }
+    // return 4;
+
     block = chunk->ny == NULL ? 4 : chunk->ny->blocks[block_index(x, CHUNK_SIZE + y, z)];
   }else if(y >= CHUNK_SIZE){
     // printf("py\n");
+    // for(unsigned short i = 0; i < chunk_count; i++){
+    //   struct chunk *other = &chunks[i];
+
+    //   if(other->x == chunk->x && other->y == chunk->y + 1 && other->z == chunk->z){
+    //     return other->blocks[block_index(x, y % CHUNK_SIZE, z)];
+    //   }
+    // }
+    // return 4;
+
     block = chunk->py == NULL ? 4 : chunk->py->blocks[block_index(x, y % CHUNK_SIZE, z)];
   }else if(z < 0){
     // printf("nz\n");
+    // for(unsigned short i = 0; i < chunk_count; i++){
+    //   struct chunk *other = &chunks[i];
+
+    //   if(other->x == chunk->x && other->y == chunk->y && other->z == chunk->z - 1){
+    //     return other->blocks[block_index(x, y, CHUNK_SIZE + z)];
+    //   }
+    // }
+    // return 4;
+
     block = chunk->nz == NULL ? 4 : chunk->nz->blocks[block_index(x, y, CHUNK_SIZE + z)];
   }else if(z >= CHUNK_SIZE){
     // printf("pz\n");
+    // for(unsigned short i = 0; i < chunk_count; i++){
+    //   struct chunk *other = &chunks[i];
+
+    //   if(other->x == chunk->x && other->y == chunk->y && other->z == chunk->z + 1){
+    //     return other->blocks[block_index(x, y, z % CHUNK_SIZE)];
+    //   }
+    // }
+    // return 4;
+
     block = chunk->pz == NULL ? 4 : chunk->pz->blocks[block_index(x, y, z % CHUNK_SIZE)];
   }else{
     // printf("c\n");
