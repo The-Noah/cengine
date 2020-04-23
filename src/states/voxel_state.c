@@ -256,8 +256,9 @@ void ensure_chunks(int x, int y, int z){
     if(abs(dx) > CHUNK_RENDER_RADIUS || abs(dy) > CHUNK_RENDER_RADIUS || abs(dz) > CHUNK_RENDER_RADIUS){
       chunk_free(chunk);
 
-      struct chunk *other = &chunks[--chunk_count];
+      struct chunk *other = &chunks[chunk_count - 1];
       memcpy(chunk, other, sizeof(struct chunk));
+      chunk_count--;
       // chunk->blocks = other->blocks;
       // chunk->elements = other->elements;
       // chunk->changed = other->changed;
