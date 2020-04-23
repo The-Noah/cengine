@@ -166,9 +166,6 @@ void* chunk_update_thread(){
         // printf("generated max number of chunk meshes for frame\n");
         break;
       }
-      if(&chunks[i] == NULL){
-        printf("NOOOO!\n");
-      }
 
       chunk_meshes_generated += chunk_update(&chunks[i]);
     }
@@ -242,6 +239,7 @@ void ensure_chunks(int x, int y, int z){
     int dy = y - chunk->y;
     int dz = z - chunk->z;
 
+    // remove chunks outside of render radius
     if(abs(dx) > CHUNK_RENDER_RADIUS || abs(dy) > CHUNK_RENDER_RADIUS || abs(dz) > CHUNK_RENDER_RADIUS){
       chunk_free(chunk);
 
@@ -273,6 +271,7 @@ void ensure_chunks(int x, int y, int z){
     }
   }
 
+  // generate new chunks needed
   unsigned short chunks_generated = 0;
   for(char i = -CHUNK_RENDER_RADIUS; i <= CHUNK_RENDER_RADIUS; i++){
     for(char j = -CHUNK_RENDER_RADIUS; j <= CHUNK_RENDER_RADIUS; j++){
@@ -282,6 +281,7 @@ void ensure_chunks(int x, int y, int z){
         int cz = z + j;
         unsigned char create = 1;
 
+        // see if chunk already exists
         for(unsigned short l = 0; l < chunk_count; l++){
           struct chunk *chunk = &chunks[l];
           if(chunk->x == cx && chunk->y == cy && chunk->z == cz){
@@ -291,6 +291,7 @@ void ensure_chunks(int x, int y, int z){
         }
 
         if(create){
+          // expand chunk capacity if needed
           if(chunk_count + 1 >= chunks_capacity){
             chunks_capacity *= 2;
             printf("reached max number of chunks, resizing to %d\n", chunks_capacity);
@@ -516,9 +517,7 @@ void voxel_state_draw(){
   for(unsigned short i = 0; i < chunk_count; i++){
     struct chunk *chunk = &chunks[i];
 
-    // if(!chunk->elements){
-    //   printf("empty chunk\n");
-    // }
+    // don't render chunk if empty or outside render radius
     if(!chunk->elements || abs(x - chunk->x) > CHUNK_RENDER_RADIUS || abs(y - chunk->y) > CHUNK_RENDER_RADIUS || abs(z - chunk->z) > CHUNK_RENDER_RADIUS){
       continue;
     }

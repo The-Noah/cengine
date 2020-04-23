@@ -105,8 +105,8 @@ struct chunk chunk_init(int x, int y, int z){
   chunk->brightness = malloc(CHUNK_SIZE_CUBED * 2 * sizeof(char));
   chunk->normal = malloc(CHUNK_SIZE_CUBED * 2 * sizeof(byte3));
   chunk->texCoords = malloc(CHUNK_SIZE_CUBED * 4 * sizeof(float));
-
-  // Initialize all neighbours to null
+  
+  // Initialize all neighbours to null to make sure neighbors don't have a value
   chunk->px = NULL;
   chunk->nx = NULL;
   chunk->py = NULL;
@@ -147,12 +147,10 @@ struct chunk chunk_init(int x, int y, int z){
       }
     }
   }
-#ifdef DEBUG
-  printf("chunk gen: %.2fms\n", (glfwGetTime() - start) * 1000.0);
-  printf("generated chunk at %d %d with %d blocks\n", x, z, count);
-#endif // DEBUG
 
-  
+#ifdef DEBUG
+  printf("chunk gen: %.2fms with %d blocks\n", (glfwGetTime() - start) * 1000.0, count);
+#endif
 
   return *chunk;
 }
@@ -173,7 +171,7 @@ void chunk_free(struct chunk *chunk){
   free(chunk->normal);
   free(chunk->texCoords);
 
-  // Remove adjacent chunk's pointers to this chunk
+  // remove this chunk from it's neighbors
   if(chunk->px != NULL){
     chunk->px->nx = NULL;
   }
