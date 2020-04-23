@@ -4,12 +4,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define GLEW_STATIC
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#define CGLM_ALL_UNALIGNED
-#include <cglm/cglm.h>
-
 #include "renderer/utils.h"
 #include "noise.h"
 #include "main.h"
