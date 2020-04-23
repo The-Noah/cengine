@@ -75,7 +75,9 @@ unsigned short block_index(uint8_t x, uint8_t y, uint8_t z){
 }
 
 struct chunk chunk_init(int x, int y, int z){
+#ifdef DEBUG
   double start = glfwGetTime();
+#endif
 
   struct chunk* chunk = malloc(sizeof(struct chunk));
   chunk->blocks = malloc(CHUNK_SIZE_CUBED * sizeof(uint8_t));
@@ -89,6 +91,7 @@ struct chunk chunk_init(int x, int y, int z){
   chunk->brightness = malloc(CHUNK_SIZE_CUBED * 2 * sizeof(char));
   chunk->normal = malloc(CHUNK_SIZE_CUBED * 2 * sizeof(byte3));
   chunk->texCoords = malloc(CHUNK_SIZE_CUBED * 4 * sizeof(float));
+  // make sure neighbors don't have a value
   chunk->px = NULL;
   chunk->nx = NULL;
   chunk->py = NULL;
@@ -119,16 +122,14 @@ struct chunk chunk_init(int x, int y, int z){
     }
   }
 
-  // printf("chunk gen: %.2fms\n", (glfwGetTime() - start) * 1000.0);
-  // printf("generated chunk at %d %d with %d blocks\n", x, z, count);
+#ifdef DEBUG
+  printf("chunk gen: %.2fms with %d blocks\n", (glfwGetTime() - start) * 1000.0, count);
+#endif
 
   return *chunk;
 }
 
 void chunk_free(struct chunk *chunk){
-  if(chunk == NULL){
-    printf("NOOOO!\n");
-  }
   glDeleteVertexArrays(1, &chunk->vao);
 
   free(chunk->blocks);
@@ -137,6 +138,7 @@ void chunk_free(struct chunk *chunk){
   free(chunk->normal);
   free(chunk->texCoords);
 
+  // remove this chunk from it's neighbors
   if(chunk->px != NULL){
     chunk->px->nx = NULL;
   }
@@ -156,6 +158,7 @@ void chunk_free(struct chunk *chunk){
     chunk->nz->pz = NULL;
   }
 
+  // remove neighbors
   chunk->px = NULL;
   chunk->nx = NULL;
   chunk->py = NULL;
@@ -165,9 +168,6 @@ void chunk_free(struct chunk *chunk){
 }
 
 unsigned char chunk_update(struct chunk *chunk){
-  if(chunk == NULL){
-    printf("NOOOO!\n");
-  }
   chunk_get_neighbors(chunk);
   if(!chunk->changed){
     return 0;

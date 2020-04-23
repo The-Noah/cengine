@@ -29,6 +29,7 @@ struct chunk{
   char *brightness;
   byte3 *normal;
   float *texCoords;
+  // neighboring chunks
   struct chunk *px;
   struct chunk *nx;
   struct chunk *py;
