@@ -9,6 +9,8 @@
 #include "main.h"
 #include "blocks.h"
 
+#define DEBUG
+
 #define TEXTURE_SIZE 4
 
 float half_pixel_correction(float coord){
@@ -30,6 +32,7 @@ void byte3_set(GLbyte x, GLbyte y, GLbyte z, byte3 dest){
   dest[2] = z;
 }
 
+// Use magic numbers >.> to check if a block ID is transparent
 unsigned char is_transparent(uint8_t block){
   switch(block){
     case 0:
@@ -40,11 +43,12 @@ unsigned char is_transparent(uint8_t block){
   }
 }
 
+// Get the neighbors of this chunk to be referenced for faster chunk generation
 void chunk_get_neighbors(struct chunk *chunk){
   if(chunk->px != NULL && chunk->nx != NULL && chunk->py != NULL && chunk->ny != NULL && chunk->pz != NULL && chunk->nz != NULL){
     return;
   }
-
+  // Loop through all the chunks to check if it is a neighbouring chunk and set it as this chunks neighbour and this chunk as its neighbour
   for(unsigned short i = 0; i < chunk_count; i++){
     struct chunk *other = &chunks[i];
 
@@ -70,25 +74,39 @@ void chunk_get_neighbors(struct chunk *chunk){
   }
 }
 
+// Convert a local 3d position into a 1d block index
 unsigned short block_index(uint8_t x, uint8_t y, uint8_t z){
   return x | (y << 5) | (z << 10);
 }
 
+// Initialize the chunk
 struct chunk chunk_init(int x, int y, int z){
-  double start = glfwGetTime();
+#ifdef DEBUG
+    double start = glfwGetTime();
+#endif // DEBUG
 
+  
+  // Allocate the required space for the chunk
   struct chunk* chunk = malloc(sizeof(struct chunk));
   chunk->blocks = malloc(CHUNK_SIZE_CUBED * sizeof(uint8_t));
+
+  // Set no elements and no mesh changes but remesh the chunk
   chunk->elements = 0;
   chunk->changed = 1;
   chunk->mesh_changed = 0;
+
+  // set this chunks position
   chunk->x = x;
   chunk->y = y;
   chunk->z = z;
+
+  // Allocate space for vertices, lighting, brightness, 
   chunk->vertex = malloc(CHUNK_SIZE_CUBED * 2 * sizeof(byte4));
   chunk->brightness = malloc(CHUNK_SIZE_CUBED * 2 * sizeof(char));
   chunk->normal = malloc(CHUNK_SIZE_CUBED * 2 * sizeof(byte3));
   chunk->texCoords = malloc(CHUNK_SIZE_CUBED * 4 * sizeof(float));
+
+  // Initialize all neighbours to null
   chunk->px = NULL;
   chunk->nx = NULL;
   chunk->py = NULL;
@@ -98,7 +116,11 @@ struct chunk chunk_init(int x, int y, int z){
 
   glGenVertexArrays(1, &chunk->vao);
 
+#ifdef DEBUG
   unsigned short count = 0;
+#endif // DEBUG
+
+  
   for(uint8_t dx = 0; dx < CHUNK_SIZE; dx++){
     for(uint8_t dz = 0; dz < CHUNK_SIZE; dz++){
       int cx = chunk->x * CHUNK_SIZE + dx;
@@ -109,34 +131,49 @@ struct chunk chunk_init(int x, int y, int z){
       int rh = h - chunk->y * CHUNK_SIZE;
 
       for(uint8_t dy = 0; dy < CHUNK_SIZE; dy++){
+
         uint8_t thickness = rh - dy;
         uint8_t block = h < CHUNK_SIZE * 1.5 && thickness <= 3 ? 5 : thickness == 1 ? 1 : thickness <= 3 ? 3 : 2;
+
         chunk->blocks[block_index(dx, dy, dz)] = dy < rh ? h == 0 ? 4 : block : 0;
-        if(dy < h){
-          count++;
+#ifdef DEBUG
+        if (dy < h) {
+            count++;
+#endif // DEBUG
+
+        
+
         }
       }
     }
   }
+#ifdef DEBUG
+  printf("chunk gen: %.2fms\n", (glfwGetTime() - start) * 1000.0);
+  printf("generated chunk at %d %d with %d blocks\n", x, z, count);
+#endif // DEBUG
 
-  // printf("chunk gen: %.2fms\n", (glfwGetTime() - start) * 1000.0);
-  // printf("generated chunk at %d %d with %d blocks\n", x, z, count);
+  
 
   return *chunk;
 }
 
+// delete the chunk
 void chunk_free(struct chunk *chunk){
+    // Don't delete a null chunk
   if(chunk == NULL){
     printf("NOOOO!\n");
   }
+  //Delete the vertex array
   glDeleteVertexArrays(1, &chunk->vao);
 
+  // Delete the stored data
   free(chunk->blocks);
   free(chunk->vertex);
   free(chunk->brightness);
   free(chunk->normal);
   free(chunk->texCoords);
 
+  // Remove adjacent chunk's pointers to this chunk
   if(chunk->px != NULL){
     chunk->px->nx = NULL;
   }
@@ -156,6 +193,7 @@ void chunk_free(struct chunk *chunk){
     chunk->nz->pz = NULL;
   }
 
+  // remove this chunk's pointers to adjacent chunks
   chunk->px = NULL;
   chunk->nx = NULL;
   chunk->py = NULL;
@@ -164,23 +202,34 @@ void chunk_free(struct chunk *chunk){
   chunk->nz = NULL;
 }
 
+// Update the chunk
 unsigned char chunk_update(struct chunk *chunk){
+    // Don't update a null chunk
   if(chunk == NULL){
     printf("NOOOO!\n");
   }
+  //Make sure all the neighbours are valid
   chunk_get_neighbors(chunk);
+
+  // if the chunk does not need to remesh then stop
   if(!chunk->changed){
     return 0;
   }
+#ifdef DEBUG
+  double start = glfwGetTime();
+#endif // DEBUG
 
-  // double start = glfwGetTime();
+  // Remesh the chunk
 
+  // The chunk has been remeshed
   chunk->changed = 0;
 
+  // i is index for vertices and j is index for lighting and normals
   unsigned int i = 0;
   unsigned int j = 0;
   unsigned int texCoord = 0;
 
+  // Texure coordinates
   float du, dv;
   float a = 0.0f;
   float b = 1.0f;
@@ -194,14 +243,18 @@ unsigned char chunk_update(struct chunk *chunk){
           continue;
         }
 
+        // texture coords
         uint8_t w;
 
-        // -x
+        
+        //Add a face if -x is transparent
         if(is_transparent(chunk_get(chunk, x - 1, y, z))){
+          // Get texture coordinates
           w = blocks[block][0];
           // du = (w % TEXTURE_SIZE) * s; dv = (w / TEXTURE_SIZE) * s;
           du = w % TEXTURE_SIZE; dv = w / TEXTURE_SIZE;
 
+          // set the vertex data for the face
           byte4_set(x, y, z, block, chunk->vertex[i++]);
           byte4_set(x, y + 1, z + 1, block, chunk->vertex[i++]);
           byte4_set(x, y + 1, z, block, chunk->vertex[i++]);
@@ -209,11 +262,13 @@ unsigned char chunk_update(struct chunk *chunk){
           byte4_set(x, y, z + 1, block, chunk->vertex[i++]);
           byte4_set(x, y + 1, z + 1, block, chunk->vertex[i++]);
 
+          // Set the brightness data for the face
           for(int k = 0; k < 6; k++){
             chunk->brightness[j] = 0;
             byte3_set(-1, 0, 0, chunk->normal[j++]);
           }
 
+          // set the texture data for the face
           chunk->texCoords[texCoord++] = half_pixel_correction(a + du); chunk->texCoords[texCoord++] = half_pixel_correction(a + dv);
           chunk->texCoords[texCoord++] = half_pixel_correction(b + du); chunk->texCoords[texCoord++] = half_pixel_correction(b + dv);
           chunk->texCoords[texCoord++] = half_pixel_correction(a + du); chunk->texCoords[texCoord++] = half_pixel_correction(b + dv);
@@ -221,6 +276,8 @@ unsigned char chunk_update(struct chunk *chunk){
           chunk->texCoords[texCoord++] = half_pixel_correction(b + du); chunk->texCoords[texCoord++] = half_pixel_correction(a + dv);
           chunk->texCoords[texCoord++] = half_pixel_correction(b + du); chunk->texCoords[texCoord++] = half_pixel_correction(b + dv);
         }
+
+        // just repeat my comments for the first face to all 6 faces lol pls
 
         // +x
         if(is_transparent(chunk_get(chunk, x + 1, y, z))){
@@ -355,15 +412,22 @@ unsigned char chunk_update(struct chunk *chunk){
     }
   }
 
+  // the mesh has been changed and the number of verticies is i
   chunk->elements = i;
   chunk->mesh_changed = 1;
-  // printf("created chunk with %d vertices\n", i);
 
-  // printf("cm: %.2fms\n", (glfwGetTime() - start) * 1000.0);
+#ifdef DEBUG
+  printf("created chunk with %d vertices\n", i);
+
+  printf("cm: %.2fms\n", (glfwGetTime() - start) * 1000.0);
+#endif // DEBUG
+
   return 1;
 }
 
+// if the chunk's mesh has been modified then send the new data to opengl (TODO: don't create a new buffer, just reuse the old one)
 void chunk_buffer_mesh(struct chunk *chunk){
+    // if the mesh has not been modified then don't bother
   if(!chunk->mesh_changed){
     return;
   }
