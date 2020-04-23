@@ -1,8 +1,12 @@
 #include "voxel_state.h"
 
+// #define MULTI_THREADING
+
 #include <stdio.h>
 #include <string.h>
+#ifdef MULTI_THREADING
 #include <pthread.h>
+#endif
 
 #ifdef _WIN32
 #include <windows.h>
@@ -43,13 +47,15 @@ const static char* voxel_fragment_shader_source = ""
 struct chunk *chunks;
 unsigned short chunk_count = 0;
 unsigned short chunks_capacity = 2048;
-unsigned char running = 1;
 
 unsigned int shader, texture, projection_location, view_location, camera_position_location, light_direction_location, daylight_location;
 Skybox skybox;
 mat4 projection = GLMS_MAT4_IDENTITY_INIT;
 
+#ifdef MULTI_THREADING
 pthread_t chunk_update_thread_id;
+unsigned char running = 1;
+#endif
 
 unsigned char reloadPress = 0;
 
@@ -158,17 +164,23 @@ uint8_t hit_test(float x, float y, float z, float rx, float ry, int *bx, int *by
   return result;
 }
 
+void update_chunks(){
+  unsigned short chunk_meshes_generated = 0;
+
+  for(unsigned short i = 0; i < chunk_count; i++){
+    if(chunk_meshes_generated >= MAX_CHUNKS_GENERATED_PER_FRAME){
+      // printf("generated max number of chunk meshes for frame\n");
+      break;
+    }
+
+    chunk_meshes_generated += chunk_update(&chunks[i]);
+  }
+}
+
+#ifdef MULTI_THREADING
 void* chunk_update_thread(){
   while(running){
-    unsigned short chunk_meshes_generated = 0;
-    for(unsigned short i = 0; i < chunk_count; i++){
-      if(chunk_meshes_generated >= MAX_CHUNKS_GENERATED_PER_FRAME){
-        // printf("generated max number of chunk meshes for frame\n");
-        break;
-      }
-
-      chunk_meshes_generated += chunk_update(&chunks[i]);
-    }
+    update_chunks();
 
 #ifdef _WIN32
     Sleep(0);
@@ -179,6 +191,7 @@ void* chunk_update_thread(){
 
   return NULL;
 }
+#endif
 
 uint8_t verc_ray_march(float x, float y, float z, float rx, float ry, int *bx, int *by, int *bz, int *cx, int *cy, int *cz){
   int px = roundf(x) / CHUNK_SIZE;
@@ -426,9 +439,11 @@ void voxel_state_init(){
 
   glfwSetTime(day_length / 3.0f);
 
+#ifdef MULTI_THREADING
   if(pthread_create(&chunk_update_thread_id, NULL, &chunk_update_thread, NULL)){
     fprintf(stderr, "failed to create chunk mesh thread\n");
   }
+#endif
 
   glfwSetInputMode(cengine.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
@@ -448,8 +463,10 @@ void voxel_state_destroy(){
   texture_delete(&texture);
   shader_delete(shader);
 
+#ifdef MULTI_THREADING
   running = 0;
   pthread_join(chunk_update_thread_id, NULL);
+#endif
 
   glfwSetInputMode(cengine.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
@@ -471,6 +488,10 @@ void voxel_state_update(float deltaTime){
   if(collide(&camera_position[0], &camera_position[1], &camera_position[2])){
     camera_dy = 0.0f;
   }
+#endif
+
+#ifndef MULTI_THREADING
+  update_chunks();
 #endif
 
   unsigned char left_mouse = glfwGetMouseButton(cengine.window, GLFW_MOUSE_BUTTON_LEFT);
