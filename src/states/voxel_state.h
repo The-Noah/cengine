@@ -7,7 +7,7 @@
 
 #include "../chunk.h"
 
-#define CHUNK_RENDER_RADIUS 4
+#define CHUNK_RENDER_RADIUS 6
 
 struct chunk *chunks;
 unsigned short chunk_count;
