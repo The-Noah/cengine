@@ -24,7 +24,7 @@
 #include "../camera.h"
 #include "../skybox.h"
 
-#define MAX_CHUNKS_GENERATED_PER_FRAME 32
+#define MAX_CHUNKS_GENERATED_PER_FRAME 8
 #define REACH_DISTANCE 12.0f
 
 const static int8_t FACES[6][3] = {
