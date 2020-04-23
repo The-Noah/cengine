@@ -20,7 +20,7 @@
 #include "../camera.h"
 #include "../skybox.h"
 
-#define MAX_CHUNKS_GENERATED_PER_FRAME 4
+#define MAX_CHUNKS_GENERATED_PER_FRAME 32
 #define REACH_DISTANCE 12.0f
 
 const static int8_t FACES[6][3] = {
@@ -42,7 +42,7 @@ const static char* voxel_fragment_shader_source = ""
 
 struct chunk *chunks;
 unsigned short chunk_count = 0;
-unsigned short chunks_capacity = 1024;
+unsigned short chunks_capacity = 2048;
 unsigned char running = 1;
 
 unsigned int shader, texture, projection_location, view_location, camera_position_location, light_direction_location, daylight_location;
@@ -166,6 +166,9 @@ void* chunk_update_thread(){
         // printf("generated max number of chunk meshes for frame\n");
         break;
       }
+      if(&chunks[i] == NULL){
+        printf("NOOOO!\n");
+      }
 
       chunk_meshes_generated += chunk_update(&chunks[i]);
     }
@@ -239,18 +242,41 @@ void ensure_chunks(int x, int y, int z){
     int dy = y - chunk->y;
     int dz = z - chunk->z;
 
-    if(abs(dx) >= CHUNK_DELETE_RADIUS || abs(dy) >= CHUNK_DELETE_RADIUS || abs(dz) >= CHUNK_DELETE_RADIUS){
+    if(abs(dx) > CHUNK_RENDER_RADIUS || abs(dy) > CHUNK_RENDER_RADIUS || abs(dz) > CHUNK_RENDER_RADIUS){
       chunk_free(chunk);
 
       struct chunk *other = &chunks[--chunk_count];
       memcpy(chunk, other, sizeof(struct chunk));
+      // chunk->blocks = other->blocks;
+      // chunk->elements = other->elements;
+      // chunk->changed = other->changed;
+      // chunk->mesh_changed = other->mesh_changed;
+      // chunk->x = other->x;
+      // chunk->y = other->y;
+      // chunk->z = other->z;
+      // chunk->vertex = other->vertex;
+      // chunk->brightness = other->brightness;
+      // chunk->normal = other->normal;
+      // chunk->texCoords = other->texCoords;
+      // chunk->px = other->px;
+      // chunk->nx = other->nx;
+      // chunk->py = other->py;
+      // chunk->ny = other->ny;
+      // chunk->pz = other->pz;
+      // chunk->nz = other->nz;
+
+      // chunk_free(other);
+      // printf("d\n");
+      // free(other);
+      // printf("e\n");
+      // other = NULL;
     }
   }
 
   unsigned short chunks_generated = 0;
-  for(char i = -CHUNK_CREATE_RADIUS; i <= CHUNK_CREATE_RADIUS; i++){
-    for(char j = -CHUNK_CREATE_RADIUS; j <= CHUNK_CREATE_RADIUS; j++){
-      for(char k = -CHUNK_CREATE_RADIUS; k <= CHUNK_CREATE_RADIUS; k++){
+  for(char i = -CHUNK_RENDER_RADIUS; i <= CHUNK_RENDER_RADIUS; i++){
+    for(char j = -CHUNK_RENDER_RADIUS; j <= CHUNK_RENDER_RADIUS; j++){
+      for(char k = -CHUNK_RENDER_RADIUS; k <= CHUNK_RENDER_RADIUS; k++){
         int cx = x + i;
         int cy = y + k;
         int cz = z + j;
@@ -490,9 +516,9 @@ void voxel_state_draw(){
   for(unsigned short i = 0; i < chunk_count; i++){
     struct chunk *chunk = &chunks[i];
 
-    if(!chunk->elements){
-      // printf("empty chunk\n");
-    }
+    // if(!chunk->elements){
+    //   printf("empty chunk\n");
+    // }
     if(!chunk->elements || abs(x - chunk->x) > CHUNK_RENDER_RADIUS || abs(y - chunk->y) > CHUNK_RENDER_RADIUS || abs(z - chunk->z) > CHUNK_RENDER_RADIUS){
       continue;
     }

@@ -54,30 +54,30 @@ void chunk_get_neighbors(struct chunk *chunk){
   for(unsigned short i = 0; i < chunk_count; i++){
     struct chunk *other = &chunks[i];
 
-    if(other->x == chunk->x + 1 && other->y == chunk->y && other->z == chunk->z){
+    if(chunk->px == NULL && other->x == chunk->x + 1 && other->y == chunk->y && other->z == chunk->z){
       chunk->px = other;
-      // printf("px\n");
-    }else if(other->x == chunk->x - 1 && other->y == chunk->y && other->z == chunk->z){
+      chunk->changed = 1;
+    }else if(chunk->nx == NULL && other->x == chunk->x - 1 && other->y == chunk->y && other->z == chunk->z){
       chunk->nx = other;
-      // printf("nx\n");
-    }else if(other->x == chunk->x && other->y == chunk->y + 1 && other->z == chunk->z){
+      chunk->changed = 1;
+    }else if(chunk->py == NULL && other->x == chunk->x && other->y == chunk->y + 1 && other->z == chunk->z){
       chunk->py = other;
-      // printf("py\n");
-    }else if(other->x == chunk->x && other->y == chunk->y - 1 && other->z == chunk->z){
+      chunk->changed = 1;
+    }else if(chunk->ny == NULL && other->x == chunk->x && other->y == chunk->y - 1 && other->z == chunk->z){
       chunk->ny = other;
-      // printf("ny\n");
-    }else if(other->x == chunk->x && other->y == chunk->y && other->z == chunk->z + 1){
+      chunk->changed = 1;
+    }else if(chunk->pz == NULL && other->x == chunk->x && other->y == chunk->y && other->z == chunk->z + 1){
       chunk->pz = other;
-      // printf("pz\n");
-    }else if(other->x == chunk->x && other->y == chunk->y && other->z == chunk->z - 1){
+      chunk->changed = 1;
+    }else if(chunk->nz == NULL && other->x == chunk->x && other->y == chunk->y && other->z == chunk->z - 1){
       chunk->nz = other;
-      // printf("nz\n");
+      chunk->changed = 1;
     }
   }
 }
 
 unsigned short block_index(uint8_t x, uint8_t y, uint8_t z){
-  return x + y * CHUNK_SIZE + z * CHUNK_SIZE_SQUARED;
+  return x | (y << 5) | (z << 10);
 }
 
 struct chunk chunk_init(int x, int y, int z){
@@ -110,7 +110,7 @@ struct chunk chunk_init(int x, int y, int z){
       int cx = chunk->x * CHUNK_SIZE + dx;
       int cz = chunk->z * CHUNK_SIZE + dz;
 
-      float f = simplex2(cx * 0.005f, cz * 0.005f, 6, 0.5f, 1.5f);
+      float f = simplex2(cx * 0.003f, cz * 0.003f, 6, 0.6f, 1.5f);
       int h = (f + 1) / 2 * (CHUNK_SIZE * 6 - 1) + 1;
       int rh = h - chunk->y * CHUNK_SIZE;
 
@@ -132,12 +132,36 @@ struct chunk chunk_init(int x, int y, int z){
 }
 
 void chunk_free(struct chunk *chunk){
+  if(chunk == NULL){
+    printf("NOOOO!\n");
+  }
   glDeleteVertexArrays(1, &chunk->vao);
+
   free(chunk->blocks);
   free(chunk->vertex);
   free(chunk->brightness);
   free(chunk->normal);
   free(chunk->texCoords);
+
+  if(chunk->px != NULL){
+    chunk->px->nx = NULL;
+  }
+  if(chunk->nx != NULL){
+    chunk->nx->px = NULL;
+  }
+  if(chunk->py != NULL){
+    chunk->py->ny = NULL;
+  }
+  if(chunk->ny != NULL){
+    chunk->ny->py = NULL;
+  }
+  if(chunk->pz != NULL){
+    chunk->pz->nz = NULL;
+  }
+  if(chunk->nz != NULL){
+    chunk->nz->pz = NULL;
+  }
+
   chunk->px = NULL;
   chunk->nx = NULL;
   chunk->py = NULL;
@@ -147,9 +171,11 @@ void chunk_free(struct chunk *chunk){
 }
 
 unsigned char chunk_update(struct chunk *chunk){
+  if(chunk == NULL){
+    printf("NOOOO!\n");
+  }
   chunk_get_neighbors(chunk);
-  if(chunk->px == NULL || chunk->nx == NULL || chunk->py == NULL || chunk->ny == NULL || chunk->pz == NULL || chunk->nz == NULL || !chunk->changed){
-    // printf("missing neighbor\n");
+  if(!chunk->changed){
     return 0;
   }
 
@@ -413,22 +439,22 @@ uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
   // printf("%d %d %d\n", x, y, z);
   if(x < 0){
     // printf("nx\n");
-    block = chunk->nx->blocks[block_index(CHUNK_SIZE + x, y, z)];
+    block = chunk->nx == NULL ? 4 : chunk->nx->blocks[block_index(CHUNK_SIZE + x, y, z)];
   }else if(x >= CHUNK_SIZE){
     // printf("px\n");
-    block = chunk->px->blocks[block_index(x % CHUNK_SIZE, y, z)];
+    block = chunk->px == NULL ? 4 : chunk->px->blocks[block_index(x % CHUNK_SIZE, y, z)];
   }else if(y < 0){
     // printf("ny\n");
-    block = chunk->ny->blocks[block_index(x, CHUNK_SIZE + y, z)];
+    block = chunk->ny == NULL ? 4 : chunk->ny->blocks[block_index(x, CHUNK_SIZE + y, z)];
   }else if(y >= CHUNK_SIZE){
     // printf("py\n");
-    block = chunk->py->blocks[block_index(x, y % CHUNK_SIZE, z)];
+    block = chunk->py == NULL ? 4 : chunk->py->blocks[block_index(x, y % CHUNK_SIZE, z)];
   }else if(z < 0){
     // printf("nz\n");
-    block = chunk->nz->blocks[block_index(x, y, CHUNK_SIZE + z)];
+    block = chunk->nz == NULL ? 4 : chunk->nz->blocks[block_index(x, y, CHUNK_SIZE + z)];
   }else if(z >= CHUNK_SIZE){
     // printf("pz\n");
-    block = chunk->pz->blocks[block_index(x, y, z % CHUNK_SIZE)];
+    block = chunk->pz == NULL ? 4 : chunk->pz->blocks[block_index(x, y, z % CHUNK_SIZE)];
   }else{
     // printf("c\n");
     block = chunk->blocks[block_index(x, y, z)];
