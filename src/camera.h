@@ -5,11 +5,11 @@
 #include <cglm/cglm.h>
 #include <cglm/struct.h>
 
-vec3 camera_position;
-mat4 view;
-float camera_yaw;
-float camera_pitch;
-float camera_dy;
+extern vec3 camera_position;
+extern mat4 view;
+extern float camera_yaw;
+extern float camera_pitch;
+extern float camera_dy;
 
 void camera_init();
 void camera_update();

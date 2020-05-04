@@ -9,8 +9,8 @@
 
 #define CHUNK_RENDER_RADIUS 6
 
-struct chunk *chunks;
-unsigned short chunk_count;
+extern struct chunk *chunks;
+extern unsigned short chunk_count;
 
 void voxel_state_init();
 void voxel_state_destroy();

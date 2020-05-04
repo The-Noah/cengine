@@ -53,10 +53,10 @@ workspace "cengine"
   }
 
 project "cengine"
-  language "C"
+  language "C++"
   targetdir "bin/%{cfg.buildcfg}" 
 
-  files {"src/**.h", "src/**.c"}
+  files {"src/**.h", "src/**.cpp"}
 
   includedirs "include/"
   staticruntime "On"

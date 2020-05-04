@@ -40,7 +40,7 @@ void camera_update(){
 void camera_update_position(){
   vec3 center = GLMS_VEC3_ZERO_INIT;
   glm_vec3_add(camera_position, camera_front, center);
-  glm_lookat(camera_position, center, (vec3){0.0f, 1.0f, 0.0f}, view);
+  glm_lookat(camera_position, center, new vec3{0.0f, 1.0f, 0.0f}, view);
 }
 
 void camera_update_rotation(){
@@ -54,15 +54,15 @@ void camera_update_rotation(){
 
 void camera_move_forward(float amount){
 #if WALKING
-  glm_vec3_add(camera_position, (vec3){camera_front[0] * amount, 0.0f, camera_front[2] * amount}, camera_position);
+  glm_vec3_add(camera_position, new vec3{camera_front[0] * amount, 0.0f, camera_front[2] * amount}, camera_position);
 #else
-  glm_vec3_add(camera_position, (vec3){camera_front[0] * amount, camera_front[1] * amount, camera_front[2] * amount}, camera_position);
+  glm_vec3_add(camera_position, new vec3{camera_front[0] * amount, camera_front[1] * amount, camera_front[2] * amount}, camera_position);
 #endif
 }
 
 void camera_move_right(float amount){
   vec3 a = GLMS_VEC3_ZERO_INIT;
-  glm_cross(camera_front, (vec3){0.0f, 1.0f, 0.0f}, a);
+  glm_cross(camera_front, new vec3{0.0f, 1.0f, 0.0f}, a);
   glm_normalize(a);
-  glm_vec3_add(camera_position, (vec3){a[0] * amount, a[1] * amount, a[2] * amount}, camera_position);
+  glm_vec3_add(camera_position, new vec3{a[0] * amount, a[1] * amount, a[2] * amount}, camera_position);
 }

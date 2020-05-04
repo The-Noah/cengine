@@ -6,7 +6,7 @@
 #define MAX(a, b) ((a) >= (b)) ? (a) : (b)
 #define WALKING 0
 
-CEngine cengine;
-double deltaTime;
+extern CEngine cengine;
+extern double deltaTime;
 
 #endif

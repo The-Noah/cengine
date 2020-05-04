@@ -11,7 +11,7 @@
 #include "state_manager.h"
 
 struct CEngineOptions{
-  char *title;
+  const char *title;
   unsigned short width;
   unsigned short height;
   unsigned char antialiasing;
