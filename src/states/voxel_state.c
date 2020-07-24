@@ -46,7 +46,7 @@ const static char* voxel_fragment_shader_source = ""
 
 struct chunk *chunks;
 unsigned short chunk_count = 0;
-unsigned short chunks_capacity = 2048;
+unsigned short chunks_capacity = 4096;
 
 unsigned int shader, texture, projection_location, view_location, camera_position_location, light_direction_location, daylight_location;
 Skybox skybox;
@@ -60,7 +60,7 @@ unsigned char running = 1;
 unsigned char reloadPress = 0;
 
 uint8_t current_block = 1;
-unsigned short day_length = 60;
+unsigned short day_length = 300;
 
 float dti(float val){
   return fabsf(val - roundf(val));

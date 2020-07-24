@@ -243,7 +243,6 @@ unsigned char chunk_update(struct chunk *chunk){
         // texture coords
         uint8_t w;
 
-        
         // add a face if -x is transparent
         if(is_transparent(chunk_get(chunk, x - 1, y, z))){
           w = blocks[block][0]; // get texture coordinates
@@ -470,6 +469,11 @@ void chunk_draw(struct chunk *chunk){
   if(!chunk->elements){
     return;
   }
+
+  // render only if all neighbors exist
+  // if(chunk->px == NULL || chunk->nx == NULL || chunk->py == NULL || chunk->ny == NULL || chunk->pz == NULL || chunk->nz == NULL){
+  //   return;
+  // }
 
   chunk_buffer_mesh(chunk);
 
