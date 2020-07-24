@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <vector>
 #ifdef MULTI_THREADING
 #include <pthread.h>
 #endif
@@ -44,11 +45,12 @@ const static char* voxel_fragment_shader_source = ""
   #include "../shaders/voxel.fs"
 ;
 
-struct chunk *chunks;
+std::vector<Chunk> chunks;
 unsigned short chunk_count = 0;
 unsigned short chunks_capacity = 2048;
 
-unsigned int shader, texture, projection_location, view_location, camera_position_location, light_direction_location, daylight_location;
+unsigned int shader, texture;
+int view_location, camera_position_location, daylight_location, projection_location, light_direction_location;
 Skybox skybox;
 mat4 projection = GLMS_MAT4_IDENTITY_INIT;
 
@@ -139,16 +141,15 @@ uint8_t hit_test(float x, float y, float z, float rx, float ry, int *bx, int *by
   float vx, vy, vz;
   get_sight_vector(rx, ry, &vx, &vy, &vz);
 
-  for(unsigned short i = 0; i < chunk_count; i++){
-    struct chunk *chunk = &chunks[i];
-    int dx = chunk->x - cx;
-    int dz = chunk->z - cz;
+  for(Chunk &chunk : chunks){
+    int dx = chunk.x - cx;
+    int dz = chunk.z - cz;
     if(abs(dx) > 1 || abs(dz) > 1){
       continue;
     }
 
     int hx, hy, hz;
-    if(_hit_test(chunk->blocks, 12.0f, x, y, z, vx, vy, vz, &hx, &hy, &hz)){
+    if(_hit_test(chunk.blocks, 12.0f, x, y, z, vx, vy, vz, &hx, &hy, &hz)){
       float d = sqrtf(powf(hx - x, 2.0f) + powf(hy - y, 2.0f) + powf(hz - z, 2.0f));
       if(best == 0 || d < best){
         best = d;
@@ -167,13 +168,13 @@ uint8_t hit_test(float x, float y, float z, float rx, float ry, int *bx, int *by
 void update_chunks(){
   unsigned short chunk_meshes_generated = 0;
 
-  for(unsigned short i = 0; i < chunk_count; i++){
+  for(Chunk &chunk : chunks){
     if(chunk_meshes_generated >= MAX_CHUNKS_GENERATED_PER_FRAME){
       // printf("generated max number of chunk meshes for frame\n");
       break;
     }
 
-    chunk_meshes_generated += chunk_update(&chunks[i]);
+    chunk_meshes_generated += chunk.update();
   }
 }
 
@@ -208,11 +209,10 @@ uint8_t verc_ray_march(float x, float y, float z, float rx, float ry, int *bx, i
     float rayy = y + vy * t;
     float rayz = z + vz * t;
 
-    for(unsigned short i = 0; i < chunk_count; i++){
-      struct chunk *chunk = &chunks[i];
-      int dx = chunk->x - px;
-      int dy = chunk->y - py;
-      int dz = chunk->z - pz;
+    for(Chunk &chunk : chunks){
+      int dx = chunk.x - px;
+      int dy = chunk.y - py;
+      int dz = chunk.z - pz;
       if(abs(dx) > 1 || abs(dy) > 1 || abs(dz) > 1){
         continue;
       }
@@ -224,16 +224,16 @@ uint8_t verc_ray_march(float x, float y, float z, float rx, float ry, int *bx, i
       int ny = abs(roundf(rayy));
       int nz = abs(roundf(rayz));
 
-      uint8_t block = chunk->blocks[block_index(nx % CHUNK_SIZE, ny % CHUNK_SIZE, nz % CHUNK_SIZE)];
+      uint8_t block = chunk.blocks[block_index(nx % CHUNK_SIZE, ny % CHUNK_SIZE, nz % CHUNK_SIZE)];
       if(block > 0){
-        printf("chunk: %d %d\n", chunk->x, chunk->z);
+        printf("chunk: %d %d\n", chunk.x, chunk.z);
         printf("hit block %d at %d %d %d\n", block, nx % CHUNK_SIZE, ny % CHUNK_SIZE, nz % CHUNK_SIZE);
         *bx = nx;
         *by = ny;
         *bz = nz;
-        *cx = chunk->x;
-        *cy = chunk->y;
-        *cz = chunk->z;
+        *cx = chunk.x;
+        *cy = chunk.y;
+        *cz = chunk.z;
 
         return 1;
       }
@@ -246,18 +246,18 @@ uint8_t verc_ray_march(float x, float y, float z, float rx, float ry, int *bx, i
 }
 
 void ensure_chunks(int x, int y, int z){
-  for(unsigned short i = 0; i < chunk_count; i++){
-    struct chunk *chunk = &chunks[i];
-    int dx = x - chunk->x;
-    int dy = y - chunk->y;
-    int dz = z - chunk->z;
+  for(Chunk &chunk : chunks){
+    int dx = x - chunk.x;
+    int dy = y - chunk.y;
+    int dz = z - chunk.z;
 
     // remove chunks outside of render radius
     if(abs(dx) > CHUNK_RENDER_RADIUS || abs(dy) > CHUNK_RENDER_RADIUS || abs(dz) > CHUNK_RENDER_RADIUS){
-      chunk_free(chunk);
+      // chunk_free(chunk);
+      chunk.destroy();
 
-      struct chunk *other = &chunks[chunk_count - 1];
-      memcpy(chunk, other, sizeof(struct chunk));
+      Chunk *other = &chunks[chunk_count - 1];
+      memcpy(&chunk, other, sizeof(Chunk));
       chunk_count--;
       // chunk->blocks = other->blocks;
       // chunk->elements = other->elements;
@@ -296,9 +296,8 @@ void ensure_chunks(int x, int y, int z){
         unsigned char create = 1;
 
         // see if chunk already exists
-        for(unsigned short l = 0; l < chunk_count; l++){
-          struct chunk *chunk = &chunks[l];
-          if(chunk->x == cx && chunk->y == cy && chunk->z == cz){
+        for(Chunk &chunk : chunks){
+          if(chunk.x == cx && chunk.y == cy && chunk.z == cz){
             create = 0;
             break;
           }
@@ -306,14 +305,15 @@ void ensure_chunks(int x, int y, int z){
 
         if(create){
           // expand chunk capacity if needed
-          if(chunk_count + 1 >= chunks_capacity){
-            chunks_capacity *= 2;
-            printf("reached max number of chunks, resizing to %d\n", chunks_capacity);
-            chunks = (struct chunk*)realloc(chunks, chunks_capacity * sizeof(struct chunk));
-          }
+          // if(chunk_count + 1 >= chunks_capacity){
+          //   chunks_capacity *= 2;
+          //   printf("reached max number of chunks, resizing to %d\n", chunks_capacity);
+          //   chunks = (struct chunk*)realloc(chunks, chunks_capacity * sizeof(Chunk));
+          // }
 
-          struct chunk chunk = chunk_init(cx, cy, cz);
-          chunks[chunk_count] = chunk;
+          Chunk chunk;
+          chunk.init(cx, cy, cz);
+          chunks.push_back(chunk);
           chunk_count++;
           chunks_generated++;
 
@@ -421,7 +421,7 @@ uint8_t collide(float *x, float *y, float *z){
 void voxel_state_init(){
   printf("voxel state init\n");
 
-  chunks = (struct chunk*)malloc(chunks_capacity * sizeof(struct chunk));
+  // chunks = (struct chunk*)malloc(chunks_capacity * sizeof(struct chunk));
 
   shader = shader_create(voxel_vertex_shader_source, voxel_fragment_shader_source);
   shader_bind(shader);
@@ -452,11 +452,11 @@ void voxel_state_init(){
 void voxel_state_destroy(){
   printf("voxel state destroy\n");
 
-  for(unsigned short i = 0; i < chunk_count; i++){
-    chunk_free(&chunks[i]);
+  for(Chunk &chunk : chunks){
+    chunk.destroy();
   }
 
-  free(chunks);
+  // free(chunks);
 
   skybox_delete(&skybox);
   skybox_free();
@@ -504,10 +504,9 @@ void voxel_state_update(float deltaTime){
       // int cx = hx / CHUNK_SIZE;
       // int cz = hz / CHUNK_SIZE;
 
-      for(unsigned short i = 0; i < chunk_count; i++){
-        struct chunk *chunk = &chunks[i];
-        if(chunk->x == cx && chunk->z == cz){
-          chunk_set(chunk, hx % CHUNK_SIZE, hy % CHUNK_SIZE, hz % CHUNK_SIZE, left_mouse ? 0 : current_block);
+      for(Chunk &chunk : chunks){
+        if(chunk.x == cx && chunk.z == cz){
+          chunk.set(hx % CHUNK_SIZE, hy % CHUNK_SIZE, hz % CHUNK_SIZE, left_mouse ? 0 : current_block);
           break;
         }
       }
@@ -536,19 +535,17 @@ void voxel_state_draw(){
   ensure_chunks(x, y, z);
 
   unsigned short rendered_chunks = 0;
-  for(unsigned short i = 0; i < chunk_count; i++){
-    struct chunk *chunk = &chunks[i];
-
+  for(Chunk &chunk : chunks){
     // don't render chunk if empty or outside render radius
-    if(!chunk->elements || abs(x - chunk->x) > CHUNK_RENDER_RADIUS || abs(y - chunk->y) > CHUNK_RENDER_RADIUS || abs(z - chunk->z) > CHUNK_RENDER_RADIUS){
+    if(!chunk.elements || abs(x - chunk.x) > CHUNK_RENDER_RADIUS || abs(y - chunk.y) > CHUNK_RENDER_RADIUS || abs(z - chunk.z) > CHUNK_RENDER_RADIUS){
       continue;
     }
 
     mat4 model = GLMS_MAT4_IDENTITY_INIT;
-    glm_translate(model, new vec3{(float)chunk->x * CHUNK_SIZE, (float)chunk->y * CHUNK_SIZE, (float)chunk->z * CHUNK_SIZE});
+    glm_translate(model, new vec3{(float)chunk.x * CHUNK_SIZE, (float)chunk.y * CHUNK_SIZE, (float)chunk.z * CHUNK_SIZE});
     shader_uniform_matrix4fv(shader, "model", model[0]);
 
-    chunk_draw(chunk);
+    chunk.draw();
     rendered_chunks++;
   }
   // printf("rendered %d chunks\n", rendered_chunks);

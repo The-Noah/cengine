@@ -2,9 +2,6 @@
 
 #include <stdio.h>
 
-#define GLEW_STATIC
-#include <GL/glew.h>
-
 unsigned int shader_create(const char* vertex_source, const char* fragment_source){
   int success;
 
@@ -78,7 +75,7 @@ void shader_delete(unsigned int shader){
   shader = 0;
 }
 
-unsigned int shader_uniform_position(unsigned int shader, const char* name){
+int shader_uniform_position(unsigned int shader, const char* name){
   return glGetUniformLocation(shader, name);
 }
 

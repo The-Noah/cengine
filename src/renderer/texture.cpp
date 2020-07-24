@@ -5,7 +5,7 @@
 
 #define RES_PATH "res/"
 
-unsigned int texture_create(const char* name, GLenum filter){
+unsigned int texture_create(const char* name, int filter){
   unsigned int texture;
   glGenTextures(1, &texture);
   texture_bind(texture, 0);
