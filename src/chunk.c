@@ -44,7 +44,7 @@ unsigned char is_transparent(uint8_t block){
 }
 
 // get the neighbors of this chunk to be referenced for faster chunk generation
-void chunk_get_neighbors(struct chunk *chunk){
+void chunk_get_neighbors(chunk_t *chunk){
   // return;
   // if we have all chunk neighbors no need to find any
   // if(chunk->px != NULL && chunk->nx != NULL && chunk->py != NULL && chunk->ny != NULL && chunk->pz != NULL && chunk->nz != NULL){
@@ -53,7 +53,7 @@ void chunk_get_neighbors(struct chunk *chunk){
 
   // loop through all the chunks to check if it is a neighbouring chunk and set it as this chunks neighbour and this chunk as its neighbour
   for(unsigned short i = 0; i < chunk_count; i++){
-    struct chunk *other = &chunks[i];
+    chunk_t *other = &chunks[i];
 
     if(/*chunk->px == NULL &&*/ other->x == chunk->x + 1 && other->y == chunk->y && other->z == chunk->z){
       if(chunk->px == NULL){
@@ -95,13 +95,13 @@ unsigned short block_index(uint8_t x, uint8_t y, uint8_t z){
 }
 
 // initialize a new chunk
-struct chunk chunk_init(int x, int y, int z){
+chunk_t chunk_init(int x, int y, int z){
 #if defined DEBUG && defined PRINT_TIMING
     double start = glfwGetTime();
 #endif
 
   // allocate the required space for the chunk
-  struct chunk* chunk = malloc(sizeof(struct chunk));
+  chunk_t* chunk = malloc(sizeof(chunk_t));
   chunk->blocks = malloc(CHUNK_SIZE_CUBED * sizeof(uint8_t));
 
   // set no elements and no mesh changes but remesh the chunk
@@ -165,7 +165,7 @@ struct chunk chunk_init(int x, int y, int z){
 }
 
 // delete the chunk
-void chunk_free(struct chunk *chunk){
+void chunk_free(chunk_t *chunk){
   // don't delete a null chunk
   if(chunk == NULL){
     printf("NOOOO!\n");
@@ -213,7 +213,7 @@ void chunk_free(struct chunk *chunk){
 }
 
 // update the chunk
-unsigned char chunk_update(struct chunk *chunk){
+unsigned char chunk_update(chunk_t *chunk){
   // don't update a null chunk
   if(chunk == NULL){
     printf("NOOOO!\n");
@@ -225,6 +225,12 @@ unsigned char chunk_update(struct chunk *chunk){
 
   // if the chunk does not need to remesh then stop
   if(!chunk->changed){
+    return 0;
+  }
+
+  // update only if all neighbors exist
+  if(chunk->px == NULL || chunk->nx == NULL || chunk->py == NULL || chunk->ny == NULL || chunk->pz == NULL || chunk->nz == NULL ||
+     chunk->px->blocks == NULL || chunk->nx->blocks == NULL || chunk->py->blocks == NULL || chunk->ny->blocks == NULL || chunk->pz->blocks == NULL || chunk->nz->blocks == NULL){
     return 0;
   }
 
@@ -444,7 +450,7 @@ unsigned char chunk_update(struct chunk *chunk){
 }
 
 // if the chunk's mesh has been modified then send the new data to opengl (TODO: don't create a new buffer, just reuse the old one)
-void chunk_buffer_mesh(struct chunk *chunk){
+void chunk_buffer_mesh(chunk_t *chunk){
   // if the mesh has not been modified then don't bother
   if(!chunk->mesh_changed){
     return;
@@ -477,7 +483,7 @@ void chunk_buffer_mesh(struct chunk *chunk){
   chunk->mesh_changed = 0;
 }
 
-void chunk_draw(struct chunk *chunk){
+void chunk_draw(chunk_t *chunk){
   // don't draw if chunk has no mesh
   if(!chunk->elements){
     return;
@@ -494,7 +500,7 @@ void chunk_draw(struct chunk *chunk){
   glDrawArrays(GL_TRIANGLES, 0, chunk->elements);
 }
 
-uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
+uint8_t chunk_get(chunk_t *chunk, int x, int y, int z){
   // if(x < 0 || x >= CHUNK_SIZE ||
   //    z < 0 || z >= CHUNK_SIZE){
   //   vec2i block_global_position = {floor(chunk->x * CHUNK_SIZE + x), floor(chunk->z * CHUNK_SIZE + z)};
@@ -507,7 +513,7 @@ uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
   //   unsigned short access = block_index(block_local_position[0], y, block_local_position[1]);
 
   //   for(unsigned short i = 0; i < chunk_count; i++){
-  //     struct chunk *other = chunks[i];
+  //     chunk_t *other = chunks[i];
   //     if(other->x == chunk_position[0] && other->z == chunk_position[1]){
   //       return other->blocks[access];
   //     }
@@ -522,7 +528,7 @@ uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
   if(x < 0){
     // printf("nx\n");
     // for(unsigned short i = 0; i < chunk_count; i++){
-    //   struct chunk *other = &chunks[i];
+    //   chunk_t *other = &chunks[i];
 
     //   if(other->x == chunk->x - 1 && other->y == chunk->y && other->z == chunk->z){
     //     return other->blocks[block_index(CHUNK_SIZE + x, y, z)];
@@ -536,7 +542,7 @@ uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
   }else if(x >= CHUNK_SIZE){
     // printf("px\n");
     // for(unsigned short i = 0; i < chunk_count; i++){
-    //   struct chunk *other = &chunks[i];
+    //   chunk_t *other = &chunks[i];
 
     //   if(other->x == chunk->x + 1 && other->y == chunk->y && other->z == chunk->z){
     //     return other->blocks[block_index(x % CHUNK_SIZE, y, z)];
@@ -550,7 +556,7 @@ uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
   }else if(y < 0){
     // printf("ny\n");
     // for(unsigned short i = 0; i < chunk_count; i++){
-    //   struct chunk *other = &chunks[i];
+    //   chunk_t *other = &chunks[i];
 
     //   if(other->x == chunk->x && other->y == chunk->y - 1 && other->z == chunk->z){
     //     return other->blocks[block_index(x, CHUNK_SIZE + y, z)];
@@ -564,7 +570,7 @@ uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
   }else if(y >= CHUNK_SIZE){
     // printf("py\n");
     // for(unsigned short i = 0; i < chunk_count; i++){
-    //   struct chunk *other = &chunks[i];
+    //   chunk_t *other = &chunks[i];
 
     //   if(other->x == chunk->x && other->y == chunk->y + 1 && other->z == chunk->z){
     //     return other->blocks[block_index(x, y % CHUNK_SIZE, z)];
@@ -578,7 +584,7 @@ uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
   }else if(z < 0){
     // printf("nz\n");
     // for(unsigned short i = 0; i < chunk_count; i++){
-    //   struct chunk *other = &chunks[i];
+    //   chunk_t *other = &chunks[i];
 
     //   if(other->x == chunk->x && other->y == chunk->y && other->z == chunk->z - 1){
     //     return other->blocks[block_index(x, y, CHUNK_SIZE + z)];
@@ -592,7 +598,7 @@ uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
   }else if(z >= CHUNK_SIZE){
     // printf("pz\n");
     // for(unsigned short i = 0; i < chunk_count; i++){
-    //   struct chunk *other = &chunks[i];
+    //   chunk_t *other = &chunks[i];
 
     //   if(other->x == chunk->x && other->y == chunk->y && other->z == chunk->z + 1){
     //     return other->blocks[block_index(x, y, z % CHUNK_SIZE)];
@@ -612,7 +618,7 @@ uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
   return block;
 }
 
-void chunk_set(struct chunk *chunk, int x, int y, int z, uint8_t block){
+void chunk_set(chunk_t *chunk, int x, int y, int z, uint8_t block){
   printf("chunk set: %d %d\n", chunk->x, chunk->z);
   unsigned short access = block_index(x, y, z);
   uint8_t _block = chunk->blocks[access];

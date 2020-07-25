@@ -1,6 +1,6 @@
 #include "voxel_state.h"
 
-#define MULTI_THREADING
+// #define MULTI_THREADING
 
 #include <stdio.h>
 #include <string.h>
@@ -44,7 +44,7 @@ const static char* voxel_fragment_shader_source = ""
   #include "../shaders/voxel.fs"
 ;
 
-struct chunk *chunks;
+chunk_t *chunks;
 unsigned short chunk_count = 0;
 unsigned short chunks_capacity = 4096;
 
@@ -140,7 +140,7 @@ uint8_t hit_test(float x, float y, float z, float rx, float ry, int *bx, int *by
   get_sight_vector(rx, ry, &vx, &vy, &vz);
 
   for(unsigned short i = 0; i < chunk_count; i++){
-    struct chunk *chunk = &chunks[i];
+    chunk_t *chunk = &chunks[i];
     int dx = chunk->x - cx;
     int dz = chunk->z - cz;
     if(abs(dx) > 1 || abs(dz) > 1){
@@ -209,7 +209,7 @@ uint8_t verc_ray_march(float x, float y, float z, float rx, float ry, int *bx, i
     float rayz = z + vz * t;
 
     for(unsigned short i = 0; i < chunk_count; i++){
-      struct chunk *chunk = &chunks[i];
+      chunk_t *chunk = &chunks[i];
       int dx = chunk->x - px;
       int dy = chunk->y - py;
       int dz = chunk->z - pz;
@@ -249,7 +249,7 @@ void ensure_chunks(int x, int y, int z){
   unsigned short count = chunk_count;
 
   for(unsigned short i = 0; i < count; i++){
-    struct chunk *chunk = &chunks[i];
+    chunk_t *chunk = &chunks[i];
     int dx = x - chunk->x;
     int dy = y - chunk->y;
     int dz = z - chunk->z;
@@ -258,8 +258,8 @@ void ensure_chunks(int x, int y, int z){
     if(abs(dx) > CHUNK_RENDER_RADIUS || abs(dy) > CHUNK_RENDER_RADIUS || abs(dz) > CHUNK_RENDER_RADIUS){
       chunk_free(chunk);
 
-      struct chunk *other = chunks + (--count);
-      memcpy(chunk, other, sizeof(struct chunk));
+      chunk_t *other = chunks + (--count);
+      memcpy(chunk, other, sizeof(chunk_t));
 
       // chunk->blocks = other->blocks;
       // chunk->elements = other->elements;
@@ -301,7 +301,7 @@ void ensure_chunks(int x, int y, int z){
 
         // see if chunk already exists
         for(unsigned short l = 0; l < chunk_count; l++){
-          struct chunk *chunk = &chunks[l];
+          chunk_t *chunk = &chunks[l];
           if(chunk->x == cx && chunk->y == cy && chunk->z == cz){
             create = 0;
             break;
@@ -313,10 +313,10 @@ void ensure_chunks(int x, int y, int z){
           if(chunk_count + 1 >= chunks_capacity){
             chunks_capacity *= 2;
             printf("reached max number of chunks, resizing to %d\n", chunks_capacity);
-            chunks = realloc(chunks, chunks_capacity * sizeof(struct chunk));
+            chunks = realloc(chunks, chunks_capacity * sizeof(chunk_t));
           }
 
-          struct chunk chunk = chunk_init(cx, cy, cz);
+          chunk_t chunk = chunk_init(cx, cy, cz);
           chunks[chunk_count] = chunk;
           chunk_count++;
           chunks_generated++;
@@ -344,7 +344,7 @@ uint8_t get_block(int x, int y, int z){
   unsigned short access = block_index(block_local_position[0], y, block_local_position[1]);
 
   for(unsigned short i = 0; i < chunk_count; i++){
-    struct chunk *other = chunks[i];
+    chunk_t *other = chunks[i];
     if(other->x == chunk_position[0] && other->z == chunk_position[1]){
       return other->blocks[access];
     }
@@ -405,7 +405,7 @@ uint8_t collide(float *x, float *y, float *z){
   int pz = round(*z) / CHUNK_SIZE;
 
   for(unsigned short i = 0; i < chunk_count; i++){
-    struct chunk *chunk = chunks[i];
+    chunk_t *chunk = chunks[i];
     int dx = chunk->x - px;
     int dz = chunk->z - pz;
 
@@ -425,7 +425,7 @@ uint8_t collide(float *x, float *y, float *z){
 void voxel_state_init(){
   printf("voxel state init\n");
 
-  chunks = malloc(chunks_capacity * sizeof(struct chunk));
+  chunks = malloc(chunks_capacity * sizeof(chunk_t));
 
   shader = shader_create(voxel_vertex_shader_source, voxel_fragment_shader_source);
   shader_bind(shader);
@@ -509,7 +509,7 @@ void voxel_state_update(float deltaTime){
       // int cz = hz / CHUNK_SIZE;
 
       for(unsigned short i = 0; i < chunk_count; i++){
-        struct chunk *chunk = &chunks[i];
+        chunk_t *chunk = &chunks[i];
         if(chunk->x == cx && chunk->z == cz){
           chunk_set(chunk, hx % CHUNK_SIZE, hy % CHUNK_SIZE, hz % CHUNK_SIZE, left_mouse ? 0 : current_block);
           break;
@@ -541,7 +541,7 @@ void voxel_state_draw(){
 
   unsigned short rendered_chunks = 0;
   for(unsigned short i = 0; i < chunk_count; i++){
-    struct chunk *chunk = &chunks[i];
+    chunk_t *chunk = &chunks[i];
 
     // don't render chunk if empty or outside render radius
     if(!chunk->elements || abs(x - chunk->x) > CHUNK_RENDER_RADIUS || abs(y - chunk->y) > CHUNK_RENDER_RADIUS || abs(z - chunk->z) > CHUNK_RENDER_RADIUS){

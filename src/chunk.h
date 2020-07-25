@@ -16,7 +16,7 @@ typedef GLbyte byte4[4];
 typedef GLbyte byte3[3];
 typedef int vec2i[2];
 
-struct chunk{
+typedef struct chunk{
   uint8_t *blocks;
   unsigned int vao;
   int elements;
@@ -36,14 +36,14 @@ struct chunk{
   struct chunk *ny;
   struct chunk *pz;
   struct chunk *nz;
-};
+} chunk_t;
 
 unsigned short block_index(uint8_t x, uint8_t y, uint8_t z);
-struct chunk chunk_init(int x, int y, int z);
-void chunk_free(struct chunk *chunk);
-unsigned char chunk_update(struct chunk *chunk);
-void chunk_draw(struct chunk *chunk);
-uint8_t chunk_get(struct chunk *chunk, int x, int y, int z);
-void chunk_set(struct chunk *chunk, int x, int y, int z, uint8_t block);
+chunk_t chunk_init(int x, int y, int z);
+void chunk_free(chunk_t *chunk);
+unsigned char chunk_update(chunk_t *chunk);
+void chunk_draw(chunk_t *chunk);
+uint8_t chunk_get(chunk_t *chunk, int x, int y, int z);
+void chunk_set(chunk_t *chunk, int x, int y, int z, uint8_t block);
 
 #endif
