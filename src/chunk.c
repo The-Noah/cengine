@@ -45,34 +45,46 @@ unsigned char is_transparent(uint8_t block){
 
 // get the neighbors of this chunk to be referenced for faster chunk generation
 void chunk_get_neighbors(struct chunk *chunk){
-  return;
+  // return;
   // if we have all chunk neighbors no need to find any
-  if(chunk->px != NULL && chunk->nx != NULL && chunk->py != NULL && chunk->ny != NULL && chunk->pz != NULL && chunk->nz != NULL){
-    return;
-  }
+  // if(chunk->px != NULL && chunk->nx != NULL && chunk->py != NULL && chunk->ny != NULL && chunk->pz != NULL && chunk->nz != NULL){
+  //   return;
+  // }
 
   // loop through all the chunks to check if it is a neighbouring chunk and set it as this chunks neighbour and this chunk as its neighbour
   for(unsigned short i = 0; i < chunk_count; i++){
     struct chunk *other = &chunks[i];
 
-    if(chunk->px == NULL && other->x == chunk->x + 1 && other->y == chunk->y && other->z == chunk->z){
+    if(/*chunk->px == NULL &&*/ other->x == chunk->x + 1 && other->y == chunk->y && other->z == chunk->z){
+      if(chunk->px == NULL){
+        chunk->changed = 1;
+      }
       chunk->px = other;
-      chunk->changed = 1;
-    }else if(chunk->nx == NULL && other->x == chunk->x - 1 && other->y == chunk->y && other->z == chunk->z){
+    }else if(/*chunk->nx == NULL &&*/ other->x == chunk->x - 1 && other->y == chunk->y && other->z == chunk->z){
+      if(chunk->nx == NULL){
+        chunk->changed = 1;
+      }
       chunk->nx = other;
-      chunk->changed = 1;
-    }else if(chunk->py == NULL && other->x == chunk->x && other->y == chunk->y + 1 && other->z == chunk->z){
+    }else if(/*chunk->py == NULL &&*/ other->x == chunk->x && other->y == chunk->y + 1 && other->z == chunk->z){
+      if(chunk->py == NULL){
+        chunk->changed = 1;
+      }
       chunk->py = other;
-      chunk->changed = 1;
-    }else if(chunk->ny == NULL && other->x == chunk->x && other->y == chunk->y - 1 && other->z == chunk->z){
+    }else if(/*chunk->ny == NULL &&*/ other->x == chunk->x && other->y == chunk->y - 1 && other->z == chunk->z){
+      if(chunk->ny == NULL){
+        chunk->changed = 1;
+      }
       chunk->ny = other;
-      chunk->changed = 1;
-    }else if(chunk->pz == NULL && other->x == chunk->x && other->y == chunk->y && other->z == chunk->z + 1){
+    }else if(/*chunk->pz == NULL &&*/ other->x == chunk->x && other->y == chunk->y && other->z == chunk->z + 1){
+      if(chunk->pz == NULL){
+        chunk->changed = 1;
+      }
       chunk->pz = other;
-      chunk->changed = 1;
-    }else if(chunk->nz == NULL && other->x == chunk->x && other->y == chunk->y && other->z == chunk->z - 1){
+    }else if(/*chunk->nz == NULL &&*/ other->x == chunk->x && other->y == chunk->y && other->z == chunk->z - 1){
+      if(chunk->nz == NULL){
+        chunk->changed = 1;
+      }
       chunk->nz = other;
-      chunk->changed = 1;
     }
   }
 }
@@ -165,6 +177,7 @@ void chunk_free(struct chunk *chunk){
 
   // delete the stored data
   free(chunk->blocks);
+  chunk->blocks = NULL;
   free(chunk->vertex);
   free(chunk->brightness);
   free(chunk->normal);
@@ -517,7 +530,9 @@ uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
     // }
     // return 4;
 
-    block = chunk->nx == NULL ? VOID_BLOCK : chunk->nx->blocks[block_index(CHUNK_SIZE + x, y, z)];
+    // printf("a\n");
+    block = chunk->nx == NULL || chunk->nx->blocks == NULL ? VOID_BLOCK : chunk->nx->blocks[block_index(CHUNK_SIZE + x, y, z)];
+    // printf("b\n");
   }else if(x >= CHUNK_SIZE){
     // printf("px\n");
     // for(unsigned short i = 0; i < chunk_count; i++){
@@ -529,7 +544,9 @@ uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
     // }
     // return 4;
 
-    block = chunk->px == NULL ? VOID_BLOCK : chunk->px->blocks[block_index(x % CHUNK_SIZE, y, z)];
+    // printf("a\n");
+    block = chunk->px == NULL || chunk->px->blocks == NULL ? VOID_BLOCK : chunk->px->blocks[block_index(x % CHUNK_SIZE, y, z)];
+    // printf("b\n");
   }else if(y < 0){
     // printf("ny\n");
     // for(unsigned short i = 0; i < chunk_count; i++){
@@ -541,7 +558,9 @@ uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
     // }
     // return 4;
 
-    block = chunk->ny == NULL ? VOID_BLOCK : chunk->ny->blocks[block_index(x, CHUNK_SIZE + y, z)];
+    // printf("a\n");
+    block = chunk->ny == NULL || chunk->ny->blocks == NULL ? VOID_BLOCK : chunk->ny->blocks[block_index(x, CHUNK_SIZE + y, z)];
+    // printf("b\n");
   }else if(y >= CHUNK_SIZE){
     // printf("py\n");
     // for(unsigned short i = 0; i < chunk_count; i++){
@@ -553,7 +572,9 @@ uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
     // }
     // return 4;
 
-    block = chunk->py == NULL ? VOID_BLOCK : chunk->py->blocks[block_index(x, y % CHUNK_SIZE, z)];
+    // printf("a\n");
+    block = chunk->py == NULL || chunk->py->blocks == NULL ? VOID_BLOCK : chunk->py->blocks[block_index(x, y % CHUNK_SIZE, z)];
+    // printf("b\n");
   }else if(z < 0){
     // printf("nz\n");
     // for(unsigned short i = 0; i < chunk_count; i++){
@@ -565,7 +586,9 @@ uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
     // }
     // return 4;
 
-    block = chunk->nz == NULL ? VOID_BLOCK : chunk->nz->blocks[block_index(x, y, CHUNK_SIZE + z)];
+    // printf("a\n");
+    block = chunk->nz == NULL || chunk->nz->blocks == NULL ? VOID_BLOCK : chunk->nz->blocks[block_index(x, y, CHUNK_SIZE + z)];
+    // printf("b\n");
   }else if(z >= CHUNK_SIZE){
     // printf("pz\n");
     // for(unsigned short i = 0; i < chunk_count; i++){
@@ -577,7 +600,9 @@ uint8_t chunk_get(struct chunk *chunk, int x, int y, int z){
     // }
     // return 4;
 
-    block = chunk->pz == NULL ? VOID_BLOCK : chunk->pz->blocks[block_index(x, y, z % CHUNK_SIZE)];
+    // printf("a\n");
+    block = chunk->pz == NULL || chunk->pz->blocks == NULL ? VOID_BLOCK : chunk->pz->blocks[block_index(x, y, z % CHUNK_SIZE)];
+    // printf("b\n");
   }else{
     // printf("c\n");
     block = chunk->blocks[block_index(x, y, z)];

@@ -1,6 +1,6 @@
 #include "voxel_state.h"
 
-// #define MULTI_THREADING
+#define MULTI_THREADING
 
 #include <stdio.h>
 #include <string.h>
@@ -246,7 +246,9 @@ uint8_t verc_ray_march(float x, float y, float z, float rx, float ry, int *bx, i
 }
 
 void ensure_chunks(int x, int y, int z){
-  for(unsigned short i = 0; i < chunk_count; i++){
+  unsigned short count = chunk_count;
+
+  for(unsigned short i = 0; i < count; i++){
     struct chunk *chunk = &chunks[i];
     int dx = x - chunk->x;
     int dy = y - chunk->y;
@@ -256,9 +258,9 @@ void ensure_chunks(int x, int y, int z){
     if(abs(dx) > CHUNK_RENDER_RADIUS || abs(dy) > CHUNK_RENDER_RADIUS || abs(dz) > CHUNK_RENDER_RADIUS){
       chunk_free(chunk);
 
-      struct chunk *other = &chunks[chunk_count - 1];
+      struct chunk *other = chunks + (--count);
       memcpy(chunk, other, sizeof(struct chunk));
-      chunk_count--;
+
       // chunk->blocks = other->blocks;
       // chunk->elements = other->elements;
       // chunk->changed = other->changed;
@@ -284,6 +286,8 @@ void ensure_chunks(int x, int y, int z){
       // other = NULL;
     }
   }
+
+  chunk_count = count;
 
   // generate new chunks needed
   unsigned short chunks_generated = 0;
