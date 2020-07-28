@@ -1,6 +1,11 @@
 workspace "cengine"
   configurations {"Debug", "Release"}
 
+  newoption {
+    ["trigger"] = "copy-res",
+    ["description"] = "Copy resource files to output directory"
+  }
+
   newaction {
     ["trigger"] = "clean",
     ["description"] = "Delete generated project and build files",
@@ -45,16 +50,16 @@ workspace "cengine"
       function()
         os.execute("premake5 build")
         if _TARGET_OS == "windows" then
-          os.execute("bin\\Debug\\cengine.exe")
+          os.execute("bin\\cengine.exe")
         else
-          os.execute("./bin/Debug/cengine")
+          os.execute("./bin/cengine")
         end
       end
   }
 
 project "cengine"
   language "C"
-  targetdir "bin/%{cfg.buildcfg}" 
+  targetdir "bin"
 
   files {"src/**.h", "src/**.c"}
 
@@ -81,3 +86,15 @@ project "cengine"
 		
   filter {"system:not windows"}
     links {"GLEW", "glfw", "rt", "m", "dl", "GL"}
+
+  filter {}
+
+  if _OPTIONS["copy-res"] then
+    print "Copying resources"
+    if _TARGET_OS == "windows" then
+      os.execute("xcopy /Q /E /Y /I res bin\\res")
+    else
+      os.execute("mkdir -p bin/res")
+      os.execute("cp -rf res bin/res")
+    end
+  end
