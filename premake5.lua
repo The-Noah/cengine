@@ -1,6 +1,20 @@
 workspace "cengine"
   configurations {"Debug", "Release"}
 
+  language "C"
+
+  filter "configurations:Debug"
+    defines {"DEBUG"}
+    symbols "On"
+
+  filter "configurations:Release"
+    defines {"NDEBUG"}
+    optimize "Speed"
+
+  filter {}
+
+  include "modules"
+
   newoption {
     ["trigger"] = "copy-res",
     ["description"] = "Copy resource files to output directory"
@@ -18,9 +32,11 @@ workspace "cengine"
         if _TARGET_OS == "windows" then
           os.execute("IF EXIST bin ( RMDIR /S /Q bin )")
           os.execute("IF EXIST obj ( RMDIR /S /Q obj )")
-          os.execute("del Makefile *.make")
+          os.execute("for /f %i in ('dir /a:d /b modules') do rmdir /S /Q modules\\%i\\bin")
+          os.execute("for /f %i in ('dir /a:d /b modules') do rmdir /S /Q modules\\%i\\obj")
+          os.execute("del Makefile *.make modules\\Makefile")
         else
-          os.execute("rm -rf bin obj Makefile *.make")
+          os.execute("rm -rf bin obj Makefile *.make modules/Makefile modules/*/bin modules/*/obj")
         end
       end,
     ["onEnd"] =
@@ -58,26 +74,22 @@ workspace "cengine"
   }
 
 project "cengine"
-  language "C"
   targetdir "bin"
 
   files {"src/**.h", "src/**.c"}
 
-  includedirs "include/"
-  staticruntime "On"
-  flags {"LinkTimeOptimization"}
-  links {"pthread"}
+  includedirs {"include/", "modules/*"}
+  links {"pthread", "noise"}
 
   disablewarnings {"trigraphs"}
 
+  staticruntime "On"
+  flags {"LinkTimeOptimization"}
+
   filter "configurations:Debug"
-    defines {"DEBUG"}
-    symbols "On"
     kind "ConsoleApp"
 
   filter "configurations:Release"
-    defines {"NDEBUG"}
-    optimize "Speed"
     kind "WindowedApp"
 
   filter {"system:windows"}

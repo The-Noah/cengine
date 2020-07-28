@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include <noise.h>
 #include "renderer/utils.h"
-#include "noise.h"
 #include "main.h"
 #include "blocks.h"
 
